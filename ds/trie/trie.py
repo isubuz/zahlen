@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     zahlen.ds.trie.trie
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~
 
     Implements the Trie data structure
 
@@ -84,7 +84,7 @@ class Trie(object):
     def search(self, word, vertex=None):
         """Search for a word in the trie.
 
-        This is merely a utility method and calls word_count() and check if the
+        This is merely a utility method and calls word_count() and checks if the
         word frequency is greater than zero.
         """
 
