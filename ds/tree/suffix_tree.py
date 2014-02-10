@@ -20,14 +20,14 @@ class Vertex(object):
 
 
 class SuffixTree(object):
-    def __init__(self, text):
+    def __init__(self, text, sentinel='$'):
         self._root = Vertex(-1, -1)
         self._active_vertex = self._root
         self._active_edge = None
         self._active_length = 0
         self._current_end = 0
         self._remainder = 0
-        self.text = text + '$'
+        self.text = text + sentinel
 
     def all_suffixes(self, vertex=None, prefix=''):
         if not vertex:
