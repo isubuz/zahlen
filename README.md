@@ -1,7 +1,7 @@
 zahlen
 ======
 
-This repository contains the python source code for algorithms and data structures used in programming. 
+This repository contains the python implementation of algorithms and data structures used in programming. 
 
 Feel free to contribute and add more implementations.
 
