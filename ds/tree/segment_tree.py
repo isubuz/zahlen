@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
 
+"""
+    zahlen.ds.tree.segment_tree
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module implements the Segment Tree data structure.
+
+    :copyright: (c) 2014 by Subhajit Ghosh.
+    :license: MIT, see LICENSE for more details.
+"""
+
 from collections import deque
 
 
@@ -44,7 +54,7 @@ class SegmentTree(object):
         for s, e, m in items:
             sg_tree_str = \
                 '{0}\nstart={1}, end={2}, minimum={3}'.format(sg_tree_str,
-                                                            s, e, m)
+                                                              s, e, m)
         return sg_tree_str
 
     def update(self, index, element):
