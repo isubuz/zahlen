@@ -77,7 +77,9 @@ class SegmentTree(object):
             # default value of None. Update the parent for the comparisons to be
             # correct.
             parent_min = self._rmqs[parent_range_index]
-            if not parent_min:
+
+            # Explicitly check for None because parent minimum may be zero.
+            if parent_min is None:
                 parent_min = element
 
             if element > parent_min:
@@ -86,13 +88,33 @@ class SegmentTree(object):
                 self._rmqs[parent_range_index] = element
                 range_index = parent_range_index
 
-    def update_min(self, start, end, new_min):
-        """Update minimum in a certain range."""
+    def query(self, start, end, range_index=0, range_start=0, range_end=None):
+        """Return the minimum within the specified range."""
 
-        pass
+        if not range_end:
+            range_end = self._size - 1
 
-    def query(self, start, end):
-        pass
+        if range_start == start and range_end == end:
+            return self._rmqs[range_index]
+        elif start == end:
+            return self._rmqs[self._leaves[start]]
+        else:
+            mid = (range_start + range_end) / 2
+            left_range_index = 2 * range_index + 1
+            right_range_index = left_range_index + 1
+
+            if end <= mid:
+                return self.query(start, end, left_range_index, range_start,
+                                  mid)
+            elif start > mid:
+                return self.query(start, end, right_range_index, mid + 1,
+                                  range_end)
+            else:
+                return \
+                    min(self.query(start, mid, left_range_index, range_start,
+                                   mid),
+                        self.query(mid + 1, end, right_range_index, mid + 1,
+                                   range_end))
 
     def _build(self, range_index, start, end):
         if start == end:
@@ -123,11 +145,39 @@ class SegmentTree(object):
 
 
 if __name__ == '__main__':
-    st = SegmentTree(5)
+    st = SegmentTree(9)
+    st.update(0, 2)
+    st.update(1, 1)
+    st.update(2, 6)
+    st.update(3, 3)
+    st.update(4, 5)
+    st.update(5, 0)
+    st.update(6, 4)
+    st.update(7, -1)
+    st.update(8, -2)
     print st
-    st.update(2, 4)
-    print st
-    st.update(1, 2)
-    print st
-    st.update(4, 1)
-    print st
+
+    print '---'
+    print st.query(0, 7)
+    print st.query(0, 3)
+    print st.query(4, 7)
+    print st.query(0, 1)
+    print st.query(2, 3)
+    print st.query(4, 5)
+    print st.query(6, 7)
+    print st.query(0, 0)
+    print st.query(1, 1)
+    print st.query(2, 2)
+    print st.query(3, 3)
+    print st.query(4, 4)
+    print st.query(5, 5)
+    print st.query(6, 6)
+    print st.query(7, 7)
+    print st.query(0, 5)
+    print st.query(2, 7)
+    print st.query(1, 3)
+    print st.query(2, 4)
+    print st.query(5, 7)
+    print st.query(5, 6)
+    print st.query(0, 8)
+    print st.query(5, 8)
