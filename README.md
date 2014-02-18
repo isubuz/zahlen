@@ -12,6 +12,7 @@ Feel free to contribute and add more implementations.
 
 
 ##### Tree
+* AVL Tree
 * Binary Search Tree
 * Bit Indexed Tree (Fenwick Tree)
 * Segment Tree
