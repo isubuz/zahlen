@@ -15,7 +15,7 @@ Feel free to contribute and add more implementations.
 * AVL Tree
 * Binary Search Tree
 * Bit Indexed Tree (Fenwick Tree)
-* Segment Tree
+* [Segment Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/segment_tree.py)
 * Suffix Tree
 
 ##### Trie
