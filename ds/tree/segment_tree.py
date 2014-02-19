@@ -6,6 +6,9 @@
 
     This module implements the Segment Tree data structure.
 
+    TODO (isubuz)
+    - Support insertion of new elements in the segment tree.
+
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
@@ -14,20 +17,37 @@ from collections import deque
 
 
 class SegmentTree(object):
-    def __init__(self, size, elements=None):
-        self._rmqs = {}
-        self._size = size
+    """Construct a segment tree.
+
+    Example usage::
+        elements = [2, 1, 3, 6, 0, -1, -2]
+
+        # Build the segment tree
+        st = SegmentTree(elements)
+
+        # Update the value of an existing element.
+        # Note that the index corresponds to the index in the original list of
+        # elements.
+        st.update(index, new_value)
+
+        # Query the minimum index within a range
+        st.query(start, end)
+    """
+
+    def __init__(self, elements):
+
+        # Store the indices of the minimum value for every range index. A range
+        # index is the index of the node in the heap which maps to a particular
+        # range.
+        self._range_min_indices = {}
+
+        # Stores the range indices of all the leaves in the heap.
         self._leaves = {}
 
-        if not elements:
-            self._elements = [None] * size
-        else:
-            if len(elements) != size:
-                print 'Size mismatch'   # Or throw error
-                return
-            self._elements = elements
+        self._size = len(elements)
+        self._elements = elements
 
-        self._build(0, 0, size - 1)
+        self._build(0, 0, self._size - 1)
 
     def __str__(self):
         """Return a string representation of the segment tree."""
@@ -38,7 +58,8 @@ class SegmentTree(object):
         queue.append((0, 0, self._size - 1))
         while queue:
             range_index, start, end = queue.popleft()
-            items.append((start, end, self._rmqs[range_index]))
+            min_index = self._range_min_indices[range_index]
+            items.append((start, end, min_index, self._elements[min_index]))
 
             if start != end:
                 # If not a left node, add the left and right child to the queue.
@@ -51,10 +72,10 @@ class SegmentTree(object):
                 queue.append((right_range_index, mid + 1, end))
 
         sg_tree_str = ''
-        for s, e, m in items:
+        for s, e, i, v in items:
             sg_tree_str = \
-                '{0}\nstart={1}, end={2}, minimum={3}'.format(sg_tree_str,
-                                                              s, e, m)
+                '{0}\nstart={1}, end={2}, minimum_index={3}, ' \
+                'minimum_value={4}'.format(sg_tree_str, s, e, i, v)
         return sg_tree_str
 
     def update(self, index, element):
@@ -66,38 +87,30 @@ class SegmentTree(object):
 
         range_index = self._leaves[index]
         self._elements[index] = element
-        self._rmqs[range_index] = element
 
         while True:
             parent_range_index = self._parent_range_index(range_index)
             if parent_range_index < 0:
                 break
 
-            # Range minimum at the parent node may not be set i.e. it has the
-            # default value of None. Update the parent for the comparisons to be
-            # correct.
-            parent_min = self._rmqs[parent_range_index]
+            parent_min = self._range_min_indices[parent_range_index]
 
-            # Explicitly check for None because parent minimum may be zero.
-            if parent_min is None:
-                parent_min = element
-
-            if element > parent_min:
+            if element > self._elements[parent_min]:
                 break
             else:
-                self._rmqs[parent_range_index] = element
+                self._range_min_indices[parent_range_index] = index
                 range_index = parent_range_index
 
     def query(self, start, end, range_index=0, range_start=0, range_end=None):
-        """Return the minimum within the specified range."""
+        """Return the index of the minimum within the specified range."""
 
         if not range_end:
             range_end = self._size - 1
 
         if range_start == start and range_end == end:
-            return self._rmqs[range_index]
+            return self._range_min_indices[range_index]
         elif start == end:
-            return self._rmqs[self._leaves[start]]
+            return self._range_min_indices[self._leaves[start]]
         else:
             mid = (range_start + range_end) / 2
             left_range_index = 2 * range_index + 1
@@ -110,16 +123,26 @@ class SegmentTree(object):
                 return self.query(start, end, right_range_index, mid + 1,
                                   range_end)
             else:
-                return \
-                    min(self.query(start, mid, left_range_index, range_start,
-                                   mid),
-                        self.query(mid + 1, end, right_range_index, mid + 1,
-                                   range_end))
+                left_min_index = self.query(start, mid, left_range_index,
+                                            range_start, mid)
+                right_min_index = self.query(mid + 1, end, right_range_index,
+                                             mid + 1, range_end)
+                if self._elements[left_min_index] < \
+                        self._elements[right_min_index]:
+                    return left_min_index
+                else:
+                    return right_min_index
 
     def _build(self, range_index, start, end):
+        """Build the heap structure for the segment tree.
+
+        Each index in the heap stores the index of the minimum value within
+        a range.
+        """
+
         if start == end:
             self._leaves[start] = range_index
-            self._rmqs[range_index] = self._elements[start]
+            self._range_min_indices[range_index] = start
         else:
             mid = (start + end) / 2
             left_range_index = 2 * range_index + 1
@@ -129,14 +152,19 @@ class SegmentTree(object):
             self._build(left_range_index, start, mid)
             self._build(right_range_index, mid + 1, end)
 
-            # Calculate the range minimum for the current range.
-            left_range_min = self._rmqs[left_range_index]
-            right_range_min = self._rmqs[right_range_index]
-            self._rmqs[range_index] = left_range_min \
-                if left_range_min < right_range_min else right_range_min
+            # Calculate the range minimum index for the current range.
+            left_min_index = self._range_min_indices[left_range_index]
+            left_range_min = self._elements[left_min_index]
+            right_min_index = self._range_min_indices[right_range_index]
+            right_range_min = self._elements[right_min_index]
+
+            self._range_min_indices[range_index] = left_min_index \
+                if left_range_min < right_range_min else right_min_index
 
     @staticmethod
     def _parent_range_index(range_index):
+        """Return the parent index for the child range index."""
+
         if range_index % 2 == 0:
             parent_range_index = (range_index - 2) / 2  # parent of right child
         else:
@@ -144,8 +172,9 @@ class SegmentTree(object):
         return parent_range_index
 
 
-if __name__ == '__main__':
+def test1():
     st = SegmentTree(9)
+    print st
     st.update(0, 2)
     st.update(1, 1)
     st.update(2, 6)
@@ -181,3 +210,24 @@ if __name__ == '__main__':
     print st.query(5, 6)
     print st.query(0, 8)
     print st.query(5, 8)
+
+
+def test2():
+    st = SegmentTree([2, 1, 6, 3, 5, 0, 4, -1, -2])
+    print st
+    st.update(4, -3)
+    print st
+    st.update(8, 7)
+    print st
+
+
+def test3():
+    st = SegmentTree([2, 1, 6, 3, -3, 0, 4, -1, -2])
+    print st.query(0, 8)
+    print st.query(0, 6)
+    print st.query(5, 8)
+    print st.query(5, 7)
+    print st.query(0, 3)
+
+if __name__ == '__main__':
+    test3()
