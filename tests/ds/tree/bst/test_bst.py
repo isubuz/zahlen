@@ -27,37 +27,37 @@ class TestRootNodeInsert(unittest.TestCase):
 
 
 class TestInsert(unittest.TestCase):
-    def test_left(self):
+    def test_path_left(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 2])
         self.assertEqual(bst.root.left.key, 2)
         self.assertIsNone(bst.root.right)
 
-    def test_right(self):
+    def test_path_right(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 12])
         self.assertIsNone(bst.root.left)
         self.assertEqual(bst.root.right.key, 12)
 
-    def test_left_right_left(self):
+    def test_path_left_right_left(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 2, 12, 6, 7])
         bst.insert(4)
         self.assertEqual(bst.root.left.right.left.key, 4)
 
-    def test_left_right_right(self):
+    def test_path_left_right_right(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 2, 12, 6, 4])
         bst.insert(7)
         self.assertEqual(bst.root.left.right.right.key, 7)
 
-    def test_right_right_right(self):
+    def test_path_right_right_right(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 15, 12, 18, 16])
         bst.insert(24)
         self.assertEqual(bst.root.right.right.right.key, 24)
 
-    def test_right_right_left(self):
+    def test_path_right_right_left(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 15, 12, 18, 24])
         bst.insert(16)
@@ -71,21 +71,21 @@ class TestInsert(unittest.TestCase):
         self.assertIsNone(bst.root.left)
         self.assertIsNone(bst.root.right)
 
-    def test_duplicate_leaf(self):
+    def test_duplicate_leaf_node(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 2, 12, 5])
         bst.insert(12)
         self.assertTrue(bst.root.right.is_leaf())
         self.assertEqual(bst.root.right.key_count, 2)
 
-    def test_duplicate_internal_complete(self):
+    def test_duplicate_internal_complete_node(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 2, 12, 6, 4, 7])
         bst.insert(6)
         self.assertEqual(bst.root.left.right.key, 6)
         self.assertEqual(bst.root.left.right.key_count, 2)
 
-    def test_duplicate_internal_non_complete(self):
+    def test_duplicate_internal_non_complete_node(self):
         bst = BinarySearchTree()
         _insert(bst, [10, 2, 12, 6, 4, 7])
         bst.insert(2)
@@ -98,37 +98,37 @@ class TestSort(unittest.TestCase):
         bst = BinarySearchTree()
         self.assertListEqual(bst.sorted_keys(), [])
 
-    def test_tree_single_element(self):
+    def test_tree_with_single_element(self):
         bst = BinarySearchTree()
         bst.insert(10)
         self.assertListEqual(bst.sorted_keys(), [10])
 
-    def test_tree_multiple_elements(self):
+    def test_tree_with_multiple_elements(self):
         bst = BinarySearchTree()
         _insert(bst, [2, 1, 4, 5, 3])
         self.assertListEqual(bst.sorted_keys(), [1, 2, 3, 4, 5])
 
-    def test_tree_multiple_elements_with_duplicates(self):
+    def test_tree_with_multiple_elements_and_duplicates(self):
         bst = BinarySearchTree()
         _insert(bst, [2, 1, 4, 5, 3, 1, 1, 6, 4])
         self.assertListEqual(bst.sorted_keys(), [1, 1, 1, 2, 3, 4, 4, 5, 6])
 
-    def test_tree_all_duplicates(self):
+    def test_tree_with_all_duplicates(self):
         bst = BinarySearchTree()
         _insert(bst, [2, 2, 2, 2, 2, 2, 2])
         self.assertListEqual(bst.sorted_keys(), [2, 2, 2, 2, 2, 2, 2])
 
-    def test_sort_at_leaf_node(self):
+    def test_at_leaf_node(self):
         bst = BinarySearchTree()
         _insert(bst, [2, 1, 4, 5, 3])
         self.assertListEqual(bst.sorted_keys(bst.root.right.left), [3])
 
-    def test_sort_at_internal_complete_node(self):
+    def test_at_internal_complete_node(self):
         bst = BinarySearchTree()
         _insert(bst, [2, 1, 4, 5, 3])
         self.assertListEqual(bst.sorted_keys(bst.root.right), [3, 4, 5])
 
-    def test_sort_at_internal_non_complete_node(self):
+    def test_at_internal_non_complete_node(self):
         bst = BinarySearchTree()
         _insert(bst, [2, 1, 4, 5, 3, 6])
         self.assertListEqual(bst.sorted_keys(bst.root.right.right), [5, 6])
