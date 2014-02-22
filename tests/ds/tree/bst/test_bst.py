@@ -93,6 +93,41 @@ class TestInsert(unittest.TestCase):
         self.assertEqual(bst.root.left.key_count, 2)
 
 
+class TestSearch(unittest.TestCase):
+    def setUp(self):
+        self.bst = _get_bst([3, 1, 0, 5, 4, 8, 9, 0])
+
+    def test_empty_tree(self):
+        bst = BinarySearchTree()
+        self.assertFalse(bst.search(10))
+
+    def test_exists_in_tree_with_single_element(self):
+        bst = _get_bst([10])
+        self.assertTrue(bst.search(10))
+
+    def test_not_exists_in_tree_with_single_element(self):
+        bst = _get_bst([10])
+        self.assertFalse(bst.search(1))
+
+    def test_exists_leaf_node_left_child(self):
+        self.assertTrue(self.bst.search(0))
+
+    def test_exists_leaf_node_right_child(self):
+        self.assertTrue(self.bst.search(9))
+
+    def test_exists_internal_non_complete_node(self):
+        self.assertTrue(self.bst.search(1))
+
+    def test_exists_internal_complete_node(self):
+        self.assertTrue(self.bst.search(5))
+
+    def test_not_exists_missing_right(self):
+        self.assertFalse(self.bst.search(2))
+
+    def test_not_exists_missing_left(self):
+        self.assertFalse(self.bst.search(7))
+
+
 class TestSort(unittest.TestCase):
     def test_empty_tree(self):
         bst = BinarySearchTree()
@@ -132,6 +167,13 @@ class TestSort(unittest.TestCase):
         bst = BinarySearchTree()
         _insert(bst, [2, 1, 4, 5, 3, 6])
         self.assertListEqual(bst.sorted_keys(bst.root.right.right), [5, 6])
+
+
+def _get_bst(keys):
+    bst = BinarySearchTree()
+    for key in keys:
+        bst.insert(key)
+    return bst
 
 
 def _insert(bst, keys):

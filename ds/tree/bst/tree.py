@@ -38,6 +38,18 @@ class BinarySearchTree(object):
             else:
                 parent.right = Node(key)
 
+    def search(self, key):
+        """Returns true if key `key` exists in the tree, else False."""
+
+        node = self.root
+        while node:
+            if node.key == key:
+                return True
+            else:
+                node = node.left if key < node.key else node.right
+
+        return False
+
     def sorted_keys(self, node=None):
         """Returns a sorted list of the keys in the tree.
 
