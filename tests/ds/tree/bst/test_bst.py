@@ -11,7 +11,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from zahlen.ds.tree.bst.tree import BinarySearchTree
+from zahlen.ds.tree.bst.tree import BinarySearchTree, TreeKeyError, \
+    SmallestElementIndexError, SuccessorIndexError
 
 import unittest
 
@@ -154,7 +155,7 @@ class TestKthSmallestKey(TestBSTStructure):
 
     def test_empty_tree_exception(self):
         bst = BinarySearchTree()
-        self.assertRaises(Exception, bst.kth_smallest_key, 1)
+        self.assertRaises(SmallestElementIndexError, bst.kth_smallest_key, 1)
 
     def test_k_less_than_1_exception(self):
         self.assertRaises(Exception, self.bst.kth_smallest_key, 0)
@@ -195,6 +196,56 @@ class TestKthSmallestKey(TestBSTStructure):
 
     def test_internal_non_complete_node_as_smallest(self):
         self.assertEqual(self.bst.kth_smallest_key(7), 10)
+
+
+class TestKthSuccessor(TestBSTStructure):
+    def test_empty_tree_exception(self):
+        bst = BinarySearchTree()
+        self.assertRaises((TreeKeyError, SuccessorIndexError),
+                          bst.kth_successor, 1, 1)
+
+    def test_k_less_than_0_exception(self):
+        self.assertRaises(SuccessorIndexError, self.bst.kth_successor, -1, 1)
+
+    def test_k_greater_than_successor_count_exception(self):
+        self.assertRaises(SuccessorIndexError, self.bst.kth_successor, 2, 12)
+        self.assertRaises(SuccessorIndexError, self.bst.kth_successor, 4, 11)
+        self.assertRaises(SuccessorIndexError, self.bst.kth_successor, 7, 6)
+        self.assertRaises(SuccessorIndexError, self.bst.kth_successor, 1, 13)
+
+    def test_k_0(self):
+        self.assertEqual(self.bst.kth_successor(0, 8), 8)
+        self.assertEqual(self.bst.kth_successor(0, 5), 5)
+        self.assertEqual(self.bst.kth_successor(0, 10), 10)
+        self.assertEqual(self.bst.kth_successor(0, 2), 2)
+        self.assertEqual(self.bst.kth_successor(0, 13), 13)
+
+    def test_parent_successor_of_leaf_node(self):
+        self.assertEqual(self.bst.kth_successor(1, 2), 3)
+        self.assertEqual(self.bst.kth_successor(1, 4), 5)
+
+    def test_non_parent_successor_of_leaf_node(self):
+        self.assertEqual(self.bst.kth_successor(1, 6), 8)
+        self.assertEqual(self.bst.kth_successor(1, 11), 12)
+
+    def test_successor_in_right_subtree(self):
+        self.assertEqual(self.bst.kth_successor(1, 3), 4)
+        self.assertEqual(self.bst.kth_successor(2, 3), 5)
+        self.assertEqual(self.bst.kth_successor(3, 3), 6)
+        self.assertEqual(self.bst.kth_successor(1, 10), 11)
+        self.assertEqual(self.bst.kth_successor(1, 12), 13)
+
+    def test_ancestor_successor(self):
+        self.assertEqual(self.bst.kth_successor(5, 2), 8)
+        self.assertEqual(self.bst.kth_successor(3, 4), 8)
+        self.assertEqual(self.bst.kth_successor(2, 5), 8)
+        self.assertEqual(self.bst.kth_successor(1, 6), 8)
+
+    def test_successor_in_different_subtree(self):
+        self.assertEqual(self.bst.kth_successor(6, 2), 10)
+        self.assertEqual(self.bst.kth_successor(7, 3), 12)
+        self.assertEqual(self.bst.kth_successor(5, 4), 11)
+        self.assertEqual(self.bst.kth_successor(5, 6), 13)
 
 
 class TestSearch(unittest.TestCase):
@@ -274,6 +325,16 @@ class TestSort(unittest.TestCase):
         bst = BinarySearchTree()
         _insert(bst, [2, 1, 4, 5, 3, 6])
         self.assertListEqual(bst.sorted_keys(bst.root.right.right), [5, 6])
+
+
+class TestSuccessorCount(TestBSTStructure):
+    def test_key_not_in_tree(self):
+        self.assertRaises(TreeKeyError, self.bst.successor_count, 99)
+
+    def test_successor_count_for_all_keys(self):
+        keys = self.bst.sorted_keys()
+        for key, count in zip(keys, xrange(len(keys) - 1, -1, -1)):
+            self.assertEqual(self.bst.successor_count(key), count)
 
 
 def _get_bst(keys):
