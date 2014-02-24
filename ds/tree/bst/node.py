@@ -14,7 +14,10 @@ class Node(object):
         self.key_count = 1
         self._left = None
         self._right = None
-        self._parent = None
+        self.parent = None
+
+    def __eq__(self, other):
+        return self.key == other.key
 
     def __str__(self):
         return 'key:{0},size:{1},count:{2}'.format(self.key, self.size,
