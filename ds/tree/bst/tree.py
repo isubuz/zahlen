@@ -28,6 +28,14 @@ class SmallestElementIndexError(Exception):
             .format(self.index)
 
 
+class SuccessorIndexError(Exception):
+    def __init__(self, index):
+        self.index = index
+
+    def __str__(self):
+        return 'Invalid successor index: {0}'.format(self.index)
+
+
 class BinarySearchTree(object):
     def __init__(self):
         self.root = None
@@ -78,8 +86,9 @@ class BinarySearchTree(object):
         if not root:
             root = self.root
 
-        if k < 1 or k > root.size:
-            raise SmallestElementIndexError(root.size)
+        max_index = 0 if not root else root.size
+        if not 1 <= k <= max_index:
+            raise SmallestElementIndexError(max_index)
 
         if root.left:
             left_subtree_size_and_root = root.left.size + 1
@@ -93,6 +102,25 @@ class BinarySearchTree(object):
         else:
             return self.kth_smallest_key(k - left_subtree_size_and_root,
                                          root.right)
+
+    def kth_successor(self, k, key):
+        """Return the kth-successor of a key."""
+
+        if k < 0 or k > self.successor_count(key):
+            raise SuccessorIndexError(k)
+
+        node = self._search_node(key)
+
+        while True:
+            if k == 0:
+                return node.key
+            else:
+                right_subtree_size = node.right.size if node.right else 0
+                if k > right_subtree_size:
+                    node = self.successor_ancestor(node)
+                    k = k - right_subtree_size - 1
+                else:
+                    return self.kth_smallest_key(k, node.right)
 
     def search(self, key):
         """Returns true if key `key` exists in the tree, else False."""
@@ -110,6 +138,26 @@ class BinarySearchTree(object):
         keys = []
         self._inorder_walk(node or self.root, keys)
         return keys
+
+    def successor_count(self, key):
+        """Return the number of successors of a key."""
+
+        node = self._search_node(key)
+        if not node:
+            raise TreeKeyError(key)
+
+        count = 0
+        while node:
+            # Account for the successor in the right subtree
+            if node.right and not node.key < key:
+                count += node.right.size
+
+            # Account for the parent
+            if node.parent and not node.parent.key < key:
+                count += 1
+            node = node.parent
+
+        return count
 
     def _delete_leaf_node(self, node):
         """Delete a leaf node."""
@@ -158,4 +206,17 @@ class BinarySearchTree(object):
                 break
             else:
                 node = node.left if key < node.key else node.right
+        return node
+
+    @staticmethod
+    def successor_ancestor(node):
+        """Return the successor ancestor of a node."""
+
+        key = node.key
+        node = node.parent
+        while node:
+            if node.key < key:
+                node = node.parent
+            else:
+                break
         return node
