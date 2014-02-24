@@ -1,20 +1,50 @@
 # -*- coding: utf-8 -*-
 
 """
+    zahlen.ds.tree.bst.tree
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
 
-from zahlen.ds.tree.bst.node import Node
+from .node import Node
+
+
+class TreeKeyError(Exception):
+    def __init__(self, key):
+        self.key = key
+
+    def __str__(self):
+        return 'Key: {0} not found in tree.'.format(self.key)
+
+
+class SmallestElementIndexError(Exception):
+    def __init__(self, max_index):
+        self.index = max_index
+
+    def __str__(self):
+        return 'Smallest element index must be a positive value less than {0}'\
+            .format(self.index)
 
 
 class BinarySearchTree(object):
     def __init__(self):
         self.root = None
 
+    def delete(self, key):
+        """Delete key ``key`` from the tree."""
+
+        node = self._search_node(key)
+        if not node:
+            raise TreeKeyError(key)
+        elif node.is_leaf():
+            self._delete_leaf_node(node)
+        else:
+            self._delete_internal_node(node)
+
     def insert(self, key):
-        """Insert a new node with key ``key``."""
+        """Insert key ``key`` in the tree."""
 
         if not self.root:
             self.root = Node(key)
@@ -24,6 +54,7 @@ class BinarySearchTree(object):
 
             while node:
                 parent = node
+                parent.size += 1
 
                 # If key already in the tree, increment key count for the node
                 # and return. A new node is not inserted.
@@ -38,17 +69,35 @@ class BinarySearchTree(object):
             else:
                 parent.right = Node(key)
 
+    def kth_smallest_key(self, k, root=None):
+        """Return the kth smallest element in the tree.
+
+        :param root: (optional) the root node to start the search from.
+        """
+
+        if not root:
+            root = self.root
+
+        if k < 1 or k > root.size:
+            raise SmallestElementIndexError(root.size)
+
+        if root.left:
+            left_subtree_size_and_root = root.left.size + 1
+        else:
+            left_subtree_size_and_root = 1
+
+        if left_subtree_size_and_root == k:
+            return root.key
+        elif left_subtree_size_and_root > k:
+            return self.kth_smallest_key(k, root.left)
+        else:
+            return self.kth_smallest_key(k - left_subtree_size_and_root,
+                                         root.right)
+
     def search(self, key):
         """Returns true if key `key` exists in the tree, else False."""
 
-        node = self.root
-        while node:
-            if node.key == key:
-                return True
-            else:
-                node = node.left if key < node.key else node.right
-
-        return False
+        return self._search_node(key) is not None
 
     def sorted_keys(self, node=None):
         """Returns a sorted list of the keys in the tree.
@@ -62,6 +111,34 @@ class BinarySearchTree(object):
         self._inorder_walk(node or self.root, keys)
         return keys
 
+    def _delete_leaf_node(self, node):
+        """Delete a leaf node."""
+
+        if node.parent:
+            node.parent.add_child(node)
+        else:
+            self.root = None
+        del node
+
+    def _delete_internal_node(self, node):
+        """Delete an internal node with 1 or 2 children."""
+
+        if not node.left or not node.right:
+            # For an incomplete internal node, replace the node with its left or
+            # right child and update the parent if any.
+            child = node.left if not node.left else node.right
+            parent = node.parent
+            if parent:
+                parent.add_child(child)
+            else:
+                self.root = child
+        else:
+            # For an complete internal node, replace node's key by inorder
+            # successor's key and remove the successor.
+            successor = self.successor(node)
+            self.delete(successor)
+            node.key = successor.key()
+
     def _inorder_walk(self, node, keys):
 
         if node:
@@ -71,3 +148,14 @@ class BinarySearchTree(object):
             for _ in xrange(node.key_count):
                 keys.append(node.key)
             self._inorder_walk(node.right, keys)
+
+    def _search_node(self, key):
+        """Return the node with key ``key`` if it exists, else return None."""
+
+        node = self.root
+        while node:
+            if node.key == key:
+                break
+            else:
+                node = node.left if key < node.key else node.right
+        return node
