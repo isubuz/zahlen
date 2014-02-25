@@ -4,6 +4,12 @@
     zahlen.ds.tree.bst.tree
     ~~~~~~~~~~~~~~~~~~~~~~~
 
+    TODO (isubuz)
+    - Some of the methods search for a node with a key multiple times. E.g. when
+    calling delete(), search_node() is called from delete() and then from
+    successor_count() and again from kth_successor(). The method API must be
+    updated to allow keys and nodes.
+
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
