@@ -6,6 +6,7 @@
     TODO (isubuz)
     - TestBSTStructure is subclassed. However subclassing runs the test cases in
     the base class multiple times. This should not happen.
+    - Construct a bigger tree in TestBSTStructure and update all tests.
 
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
@@ -46,6 +47,56 @@ class TestBSTStructure(unittest.TestCase):
     def test_internal_non_complete_node(self):
         node = self.bst.root.right.left
         self.assertTrue(not node.is_leaf() and not node.is_complete())
+
+
+class TestDelete(TestBSTStructure):
+    def test_key_not_exists(self):
+        self.assertRaises(TreeKeyError, self.bst.delete, 99)
+
+    def test_empty_tree_after_delete(self):
+        bst = _get_bst([10])
+        bst.delete(10)
+        self.assertFalse(bst.root)
+
+    def test_left_leaf_node(self):
+        self.bst.delete(2)
+        self.assertFalse(self.bst.root.left.left)
+
+    def test_right_leaf_node(self):
+        self.bst.delete(11)
+        self.assertFalse(self.bst.root.right.left.right)
+
+    def test_complete_node_successor_is_right_child_and_leaf_node(self):
+        self.bst.delete(12)
+        node = self.bst.root.right
+        self.assertEqual(node.key, 13)
+        self.assertEqual(node.left.key, 10)
+        self.assertFalse(node.right)
+
+    def test_complete_node_successor_is_leaf_node(self):
+        self.bst.delete(3)
+        node = self.bst.root.left
+        self.assertEqual(node.key, 4)
+        self.assertEqual(node.right.key, 5)
+        self.assertFalse(node.right.left)
+
+    def test_complete_node_successor_is_internal_non_complete_node(self):
+        self.bst.delete(8)
+        node = self.bst.root
+        self.assertEqual(node.key, 10)
+        self.assertEqual(node.right.key, 12)
+        self.assertEqual(node.right.left.key, 11)
+
+    def test_non_complete_node_no_left_child(self):
+        self.bst.delete(10)
+        parent = self.bst.root.right
+        self.assertEqual(parent.left.key, 11)
+        self.assertFalse(parent.left.left)
+        self.assertFalse(parent.left.right)
+
+    # TODO (isubuz) Construct a bigger tree and add more tests.
+        # test_non_complete_node_no_right_child()
+        # test_non_complete_node_right_child_complete()/non_complete()/leaf()
 
 
 class TestRootNodeInsert(unittest.TestCase):
