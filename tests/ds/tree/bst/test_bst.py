@@ -7,12 +7,13 @@
     - TestBSTStructure is subclassed. However subclassing runs the test cases in
     the base class multiple times. This should not happen.
     - Construct a bigger tree in TestBSTStructure and update all tests.
+    - Add a tree with duplicate keys
 
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
 
-from zahlen.ds.tree.bst.tree import BinarySearchTree, TreeKeyError, \
+from zahlen.ds.tree.bst import BinarySearchTree, TreeKeyError, \
     SmallestElementIndexError, SuccessorIndexError
 
 import unittest
