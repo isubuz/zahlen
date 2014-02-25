@@ -13,7 +13,7 @@ Feel free to contribute and add more implementations.
 
 ##### Tree
 * AVL Tree
-* Binary Search Tree
+* [Binary Search Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/bst.py)
 * Bit Indexed Tree (Fenwick Tree)
 * [Segment Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/segment_tree.py)
 * Suffix Tree
