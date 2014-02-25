@@ -44,6 +44,7 @@ class BinarySearchTree(object):
         """Delete key ``key`` from the tree."""
 
         node = self._search_node(key)
+
         if not node:
             raise TreeKeyError(key)
         elif node.is_leaf():
@@ -139,6 +140,19 @@ class BinarySearchTree(object):
         self._inorder_walk(node or self.root, keys)
         return keys
 
+    @staticmethod
+    def successor_ancestor(node):
+        """Return the successor ancestor of a node."""
+
+        key = node.key
+        node = node.parent
+        while node:
+            if node.key < key:
+                node = node.parent
+            else:
+                break
+        return node
+
     def successor_count(self, key):
         """Return the number of successors of a key."""
 
@@ -163,7 +177,10 @@ class BinarySearchTree(object):
         """Delete a leaf node."""
 
         if node.parent:
-            node.parent.add_child(node)
+            if node.key < node.parent.key:
+                node.parent.left = None
+            else:
+                node.parent.right = None
         else:
             self.root = None
         del node
@@ -174,18 +191,23 @@ class BinarySearchTree(object):
         if not node.left or not node.right:
             # For an incomplete internal node, replace the node with its left or
             # right child and update the parent if any.
-            child = node.left if not node.left else node.right
             parent = node.parent
+            child = node.left if node.left else node.right
+            child.parent = parent
+
             if parent:
-                parent.add_child(child)
+                if node.key < parent.key:
+                    parent.left = child
+                else:
+                    parent.right = child
             else:
                 self.root = child
         else:
             # For an complete internal node, replace node's key by inorder
             # successor's key and remove the successor.
-            successor = self.successor(node)
+            successor = self.kth_successor(1, node.key)
             self.delete(successor)
-            node.key = successor.key()
+            node.key = successor
 
     def _inorder_walk(self, node, keys):
 
@@ -208,15 +230,4 @@ class BinarySearchTree(object):
                 node = node.left if key < node.key else node.right
         return node
 
-    @staticmethod
-    def successor_ancestor(node):
-        """Return the successor ancestor of a node."""
 
-        key = node.key
-        node = node.parent
-        while node:
-            if node.key < key:
-                node = node.parent
-            else:
-                break
-        return node
