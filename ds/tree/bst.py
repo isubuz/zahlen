@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+
+"""
+    zahlen.ds.tree.bst
+    ~~~~~~~~~~~~~~~~~~
+
+    This module implements the Binary Search Tree data structure.
+
+    :copyright: (c) 2014 by Subhajit Ghosh.
+    :license: MIT, see LICENSE for more details.
+"""
 
 
 class Node(object):
