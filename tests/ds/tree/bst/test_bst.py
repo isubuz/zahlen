@@ -13,10 +13,87 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from zahlen.ds.tree.bst import BinarySearchTree, TreeKeyError, \
+from collections import deque
+from zahlen.ds.tree.bst import BinarySearchTree, Node, TreeKeyError, \
     SmallestElementIndexError, SuccessorIndexError
 
 import unittest
+
+
+class TreeStructure(unittest.TestCase):
+    def assert_tree(self, actual, expected_nodes):
+        """Assert tree structure.
+
+        The expected tree is formed out of the expected nodes tuples.
+        """
+        expected = self._construct_tree(expected_nodes)
+
+        queue = deque()
+        queue.append((actual.root, expected.root))
+        while queue:
+            actual_node, expected_node = queue.popleft()
+            self.assert_node(actual_node, expected_node)
+
+            if expected_node.left:
+                queue.appendleft((actual_node.left, expected_node.left))
+            if expected_node.right:
+                queue.appendleft((actual_node.right, expected_node.right))
+
+    def assert_node_key(self, actual, expected):
+        """Assert key stored in node.
+
+        If the expected node is None, the actual node must be None. Else, their
+        key has to match.
+        """
+        if expected:
+            self.assertTrue(actual)
+            self.assertEqual(actual.key, expected.key)
+        else:
+            self.assertFalse(actual)
+
+    def assert_node(self, actual, expected):
+        """Assert key stored in node, node's parent, left and right children."""
+
+        # Assert node key
+        self.assert_node_key(actual, expected)
+
+        # Assert parent key
+        self.assert_node_key(actual.parent, expected.parent)
+
+        # Assert left child key
+        self.assert_node_key(actual.left, expected.left)
+
+        # Assert right child key
+        self.assert_node_key(actual.right, expected.right)
+
+    def _construct_tree(self, node_tuples):
+        """Construct a tree out of the node tuples.
+
+        Each node tuple is of the form (node.key, node.left.key, node.right.key)
+        """
+
+        nodes = {}
+
+        for key, left_key, right_key in node_tuples:
+            if key in nodes:
+                node = nodes[key]
+            else:
+                node = nodes[key] = Node(key)
+
+            if left_key in nodes:
+                node.left.key_count += 1
+            else:
+                node.left = nodes[left_key] = Node(left_key)
+
+            if right_key in nodes:
+                node.right.key_count += 1
+            else:
+                node.right = nodes[right_key] = Node(right_key)
+
+        tree = BinarySearchTree()
+        tree.root = nodes[node_tuples[0][0]]
+
+        return tree
 
 
 class TestBSTStructure(unittest.TestCase):
