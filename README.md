@@ -12,7 +12,7 @@ Feel free to contribute and add more implementations.
 
 
 ##### Tree
-* AVL Tree
+* [AVL Tree] (https://github.com/isubuz/zahlen/blob/master/tests/ds/tree/test_avl.py)
 * [Binary Search Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/bst.py)
 * Bit Indexed Tree (Fenwick Tree)
 * [Segment Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/segment_tree.py)
