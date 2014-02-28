@@ -10,49 +10,19 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from collections import deque
-from zahlen.ds.tree.avl2 import AVLTree
+from test_bst import BSTTestCase
+from zahlen.ds.tree.avl import AVLTree
 
 import unittest
 
 
-class AVLTestCase(unittest.TestCase):
-    def assert_tree(self, actual, expected):
-        """Assert if two tree are equal."""
-
-        queue = deque()
-        queue.append((actual.root, expected.root))
-        while queue:
-            actual_node, expected_node = queue.popleft()
-            self.assert_node(actual_node, expected_node)
-
-            if expected_node:
-                if expected_node.left:
-                    queue.appendleft((actual_node.left, expected_node.left))
-                if expected_node.right:
-                    queue.appendleft((actual_node.right, expected_node.right))
-
+class AVLTestCase(BSTTestCase):
     def assert_node(self, actual, expected):
         """Assert if two nodes are equal."""
 
-        if not expected:
-            self.assertIsNone(actual)
-        else:
-            self.assertIsNotNone(actual)
-
-            self.assertEqual(actual.key, expected.key)
-            self.assertEqual(actual.key_count, expected.key_count)
-            self.assertEqual(actual.size, expected.size)
+        super(AVLTestCase, self).assert_node(actual, expected)
+        if expected:
             self.assertEqual(actual.height, expected.height)
-
-            for act, exp in [(actual.left, expected.left),
-                             (actual.right, expected.right),
-                             (actual.parent, expected.parent)]:
-                if exp:
-                    self.assertIsNotNone(act)
-                    self.assertEqual(act.key, exp.key)
-                else:
-                    self.assertIsNone(act)
 
 
 class TestInsert(AVLTestCase):
