@@ -75,7 +75,15 @@ class AVLTree(object):
         return bst_to_str(self._root)
 
     def delete(self, key):
-        pass
+        """Delete a node with key ``key``."""
+
+        node = self.search(key)
+        if not node:
+            print 'Node with key {0} not found.'.format(key)    # Or throw error
+        elif node.is_leaf():
+            self._delete_leaf_node(node)
+        else:
+            self._delete_non_leaf_node(node)
 
     def insert(self, key):
         """Insert a node with key ``key``."""
@@ -107,8 +115,8 @@ class AVLTree(object):
         if not node:
             node = self._root
 
-        if k < 1 or (node.key + k) > self._root.size:
-            print 'Invalid k:{0}'.format(k)     # Or throw error
+        if k < 1:  # or (node.size + 1 + k) > self._root.size:
+            print 'Invalid k: {0}'.format(k)     # Or throw error
             return
 
         if node.right_size >= k:
@@ -125,7 +133,7 @@ class AVLTree(object):
             node = self._root
 
         if k < 1 or k > node.size + 1:
-            print 'Invalid k:{0}'.format(k)     # Or throw error
+            print 'Invalid k: {0}'.format(k)     # Or throw error
             return
 
         if node.left_size + 1 == k:
@@ -135,11 +143,9 @@ class AVLTree(object):
         else:
             return self.kth_smallest_element(k - node.left_size - 1, node.right)
 
-    def sort(self):
-        pass
-
     def search(self, key):
         """Find the node with key ``key``."""
+
         node = self._root
         while node:
             if key == node.key:
@@ -161,6 +167,37 @@ class AVLTree(object):
             if node.right.is_left_heavy(diff=0):
                 self._rotate_right(node.right, node.right.left)
             self._rotate_left(node, node.right)
+
+    def _delete_leaf_node(self, node):
+        """Delete a leaf node."""
+
+        parent = node.parent
+        if node.key < parent.key:
+            parent.left = None
+        else:
+            parent.right = None
+        del node
+        self._update_height(parent)
+
+    def _delete_non_leaf_node(self, node):
+        """Delete a node with 1 or 2 children."""
+
+        if not node.left or not node.right:
+            parent = node.parent
+            node = node.left or node.right
+            node.parent = parent
+
+            if node.key < parent.key:
+                parent.left = node
+            else:
+                parent.right = node
+            self._update_height(parent)
+        else:
+            # Replace node's key by inorder successor's key and remove the
+            # successor.
+            key = self.kth_successor(1, node)
+            self.delete(key)
+            node.key = key
 
     def _update_height(self, node):
         parent = node.parent
@@ -191,7 +228,7 @@ class AVLTree(object):
         node.left = heavy_child.right
         node.parent = heavy_child
         heavy_child.right = node
-        heavy_child.parent = node.parent
+        heavy_child.parent = parent
         if parent:
             if heavy_child.key < parent.key:
                 parent.left = heavy_child
@@ -244,10 +281,30 @@ def main():
 
 def main1():
     avl = AVLTree()
-    avl.insert(1)
-    avl.insert(3)
-    avl.insert(4)
+    for key in [41, 20, 65, 11, 50]:
+        avl.insert(key)
+    print avl
+    avl.insert(55)
     print avl
 
+
+def test_delete():
+    keys = [41, 20, 65, 11, 26, 50, 23, 29, 55]
+
+    def get_avl():
+        avl = AVLTree()
+        for k in keys:
+            avl.insert(k)
+        return avl
+
+    for key in keys:
+        a = get_avl()
+        print '---'
+        print a
+        print 'Delete: ' + str(key)
+        a.delete(key)
+        print a
+
 if __name__ == '__main__':
-    main()
+    test_delete()
+    # main1()
