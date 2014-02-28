@@ -13,19 +13,21 @@
 
 class Node(object):
     def __init__(self, key):
-        self.size = 1
-        self.key = key
-        self.key_count = 1
         self._left = None
         self._right = None
+
+        self.key = key
+        self.key_count = 1
         self.parent = None
+        self.size = 1
 
     def __eq__(self, other):
         return self.key == other.key
 
     def __str__(self):
-        return 'key:{0},size:{1},count:{2}'.format(self.key, self.size,
-                                                   self.key_count)
+        parent_key = self.parent.key if self.parent else -1
+        return 'key:{0},parent:{1},size:{2},count:{3}'.format(
+            self.key, parent_key, self.size, self.key_count)
 
     @property
     def left(self):
@@ -38,6 +40,10 @@ class Node(object):
             node.parent = self
 
     @property
+    def left_size(self):
+        return self.left.size if self.left else 0
+
+    @property
     def right(self):
         return self._right
 
@@ -46,6 +52,10 @@ class Node(object):
         self._right = node
         if node:
             node.parent = self
+
+    @property
+    def right_size(self):
+        return self.right.size if self.right else 0
 
     def add_child(self, child):
         """Add a left or a right child based on the child's key.
@@ -104,32 +114,61 @@ class BinarySearchTree(object):
         self.root = None
 
     def __str__(self):
-        return bst_to_str(self.root)
+        return self.draw(self.root)
 
-    def delete(self, key):
-        """Delete key ``key`` from the tree."""
+    @staticmethod
+    def create_node(key):
+        """Create and return a new node with the specified key ``key``."""
+
+        return Node(key)
+
+    def delete(self, key, all=False):
+        """Delete key ``key`` from the tree.
+
+        :all If true all occurrences of the key will be deleted.
+        """
 
         node = self._search_node(key)
 
         if not node:
             raise TreeKeyError(key)
+
+        if not all and node.key_count > 1:
+            node.key_count -= 1
         elif node.is_leaf():
             self._delete_leaf_node(node)
         else:
             self._delete_internal_node(node)
 
+    def draw(self, node, depth=0):
+        """Print a subtree rooted at a node at certain depth."""
+
+        key = node.key if node else 'NULL'
+
+        if depth:
+            prefix = '|   ' * depth + '|---'
+        else:
+            prefix = ''
+
+        node_str = prefix + '(' + str(key) + ')\n'
+
+        if node and not node.is_leaf():
+            node_str += self.draw(node.right, depth + 1)
+            node_str += self.draw(node.left, depth + 1)
+
+        return node_str
+
     def insert(self, key):
         """Insert key ``key`` in the tree."""
 
         if not self.root:
-            self.root = Node(key)
+            self.root = self.create_node(key)
         else:
             node = self.root
             parent = None
 
             while node:
                 parent = node
-                parent.size += 1
 
                 # If key already in the tree, increment key count for the node
                 # and return. A new node is not inserted.
@@ -139,10 +178,13 @@ class BinarySearchTree(object):
 
                 node = node.left if key < node.key else node.right
 
+            new_node = self.create_node(key)
             if key < parent.key:
-                parent.left = Node(key)
+                parent.left = new_node
             else:
-                parent.right = Node(key)
+                parent.right = new_node
+
+            self._update(parent)
 
     def kth_smallest_key(self, k, root=None):
         """Return the kth smallest element in the tree.
@@ -242,11 +284,13 @@ class BinarySearchTree(object):
     def _delete_leaf_node(self, node):
         """Delete a leaf node."""
 
-        if node.parent:
-            if node.key < node.parent.key:
-                node.parent.left = None
+        parent = node.parent
+        if parent:
+            if node.key < parent.key:
+                parent.left = None
             else:
-                node.parent.right = None
+                parent.right = None
+            self._update(parent)
         else:
             self.root = None
         del node
@@ -268,12 +312,18 @@ class BinarySearchTree(object):
                     parent.right = child
             else:
                 self.root = child
+            self._update(parent)
         else:
             # For an complete internal node, replace node's key by inorder
             # successor's key and remove the successor.
-            successor = self.kth_successor(1, node.key)
-            self.delete(successor)
-            node.key = successor
+            # TODO (isubuz) Avoid calling search_node() again. kth_successor()
+            # and delete with call search_node() again.
+            successor = self._search_node(self.kth_successor(1, node.key))
+            key = successor.key
+            key_count = successor.key_count
+            self.delete(key, all=True)
+            node.key = key
+            node.key_count = key_count
 
     def _inorder_walk(self, node, keys):
 
@@ -296,21 +346,13 @@ class BinarySearchTree(object):
                 node = node.left if key < node.key else node.right
         return node
 
+    def _update(self, node):
+        """Update node attributes.
 
-def bst_to_str(node, depth=0):
-    """Print a subtree rooted at a node at certain depth."""
+        This method should be called when deleting or inserting a node in the
+        tree.
+        """
 
-    key = node.key if node else 'NULL'
-
-    if depth:
-        prefix = '|   ' * depth + '|---'
-    else:
-        prefix = ''
-
-    node_str = prefix + '(' + str(key) + ')\n'
-
-    if node and not node.is_leaf():
-        node_str += bst_to_str(node.right, depth + 1)
-        node_str += bst_to_str(node.left, depth + 1)
-
-    return node_str
+        while node:
+            node.size = 1 + node.right_size + node.left_size
+            node = node.parent
