@@ -4,49 +4,32 @@
     zahlen.ds.tree.avl
     ~~~~~~~~~~~~~~~~~~
 
-    This module implements the AVL tree data structure.
-
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
 
+import bst
 
-class _Node(object):
-    def __init__(self, key=None, left=None, right=None, parent=None):
-        self.key = key
-        self.left = left
-        self.right = right
-        self.parent = parent
 
-    def __str__(self):
-        parent_key = self.parent.key if self.parent else '-1'
-        return '{0}:{1}:{2}:{3}'.format(self.key, parent_key, self.size,
-                                        self.height)
+class Node(bst.Node):
+    def __init__(self, key):
+        """
 
-    @property
-    def height(self):
-        h = 1 + max(self.left_height, self.right_height)
-        return h
+        height: No. of nodes in the longest path from the node to a leaf node.
+        """
+        super(Node, self).__init__(key)
+        self.height = 0
 
     @property
     def left_height(self):
-        return 0 if not self.left else self.left.height
-
-    @property
-    def left_size(self):
-        return 0 if not self.left else self.left.size + 1
+        return self.left.height if self.left else -1
 
     @property
     def right_height(self):
-        return 0 if not self.right else self.right.height
+        return self.right.height if self.right else -1
 
-    @property
-    def right_size(self):
-        return 0 if not self.right else self.right.size + 1
-
-    @property
-    def size(self):
-        return self.left_size + self.right_size
+    def is_heavy(self):
+        return abs(self.left_height - self.right_height) > 1
 
     def is_left_heavy(self, diff=1):
         return (self.left_height - self.right_height) > diff
@@ -54,257 +37,96 @@ class _Node(object):
     def is_right_heavy(self, diff=1):
         return (self.right_height - self.left_height) > diff
 
-    def is_leaf(self):
-        return not self.left and not self.right
+    def update(self):
+        """Update the size and height of the node."""
 
-    def is_left_child(self):
-        return not self.is_root() and self.key < self.parent.key
-
-    def is_right_child(self):
-        return not self.is_root() and not self.is_left_child()
-
-    def is_root(self):
-        return self.parent is None
+        self.size = 1 + self.left_size + self.right_size
+        self.height = 1 + max(self.left_height, self.right_height)
 
 
-class AVLTree(object):
-    def __init__(self):
-        self._root = None
+class AVLTree(bst.BinarySearchTree):
 
-    def __str__(self):
-        return bst_to_str(self._root)
+    @staticmethod
+    def create_node(key):
+        return Node(key)
 
-    def delete(self, key):
-        """Delete a node with key ``key``."""
+    def is_balanced(self, node=None):
+        """Return true if the AVL tree is balanced.
 
-        node = self.search(key)
-        if not node:
-            print 'Node with key {0} not found.'.format(key)    # Or throw error
-        elif node.is_leaf():
-            self._delete_leaf_node(node)
-        else:
-            self._delete_non_leaf_node(node)
-
-    def insert(self, key):
-        """Insert a node with key ``key``."""
-
-        if self._root is None:
-            self._root = _Node(key)
-            return
-
-        node = self._root
-        while True:
-            if key < node.key:
-                if not node.left:
-                    node.left = _Node(key, parent=node)
-                    self._update_height(node)
-                    break
-                else:
-                    node = node.left
-            else:
-                if not node.right:
-                    node.right = _Node(key, parent=node)
-                    self._update_height(node)
-                    break
-                else:
-                    node = node.right
-
-    def kth_successor(self, k, node=None):
-        """Return the kth-successor."""
+        Recursively check if node and its children are heavy nodes.
+        """
 
         if not node:
-            node = self._root
+            node = self.root
 
-        if k < 1:  # or (node.size + 1 + k) > self._root.size:
-            print 'Invalid k: {0}'.format(k)     # Or throw error
-            return
+        is_balanced = not node.is_heavy()
 
-        if node.right_size >= k:
-            return self.kth_smallest_element(k, node.right)
-        elif node.right_size + 1 == k:
-            return node.parent.key
-        else:
-            return self.kth_successor(k - node.right_size - 1, node.parent)
+        # If parent is balanced, check left child
+        if is_balanced and node.left:
+            is_balanced = self.is_balanced(node.left)
 
-    def kth_smallest_element(self, k, node=None):
-        """Return the kth smallest element in the tree."""
+        # If parent and left child are balanced, check right child
+        if is_balanced and node.right:
+            is_balanced = self.is_balanced(node.right)
 
-        if not node:
-            node = self._root
-
-        if k < 1 or k > node.size + 1:
-            print 'Invalid k: {0}'.format(k)     # Or throw error
-            return
-
-        if node.left_size + 1 == k:
-            return node.key
-        elif node.left_size + 1 > k:
-            return self.kth_smallest_element(k, node.left)
-        else:
-            return self.kth_smallest_element(k - node.left_size - 1, node.right)
-
-    def search(self, key):
-        """Find the node with key ``key``."""
-
-        node = self._root
-        while node:
-            if key == node.key:
-                break
-            elif key < node.key:
-                node = node.left
-            else:
-                node = node.right
-        return node
+        return is_balanced
 
     def _balance(self, node):
+        parent = node.parent
         if node.is_left_heavy():
-            # If left child is right-heavy, first convert it to left-heavy.
+            # If left child is right heavy, first make it left heavy.
             if node.left.is_right_heavy(diff=0):
                 self._rotate_left(node.left, node.left.right)
             self._rotate_right(node, node.left)
         elif node.is_right_heavy():
-            # If right child is left-heavy, first convert it to right-heavy.
+            # If right child is left heavy, first make it right heavy.
             if node.right.is_left_heavy(diff=0):
                 self._rotate_right(node.right, node.right.left)
             self._rotate_left(node, node.right)
 
-    def _delete_leaf_node(self, node):
-        """Delete a leaf node."""
-
-        parent = node.parent
-        if node.key < parent.key:
-            parent.left = None
-        else:
-            parent.right = None
-        del node
-        self._update_height(parent)
-
-    def _delete_non_leaf_node(self, node):
-        """Delete a node with 1 or 2 children."""
-
-        if not node.left or not node.right:
-            parent = node.parent
-            node = node.left or node.right
-            node.parent = parent
-
-            if node.key < parent.key:
-                parent.left = node
-            else:
-                parent.right = node
-            self._update_height(parent)
-        else:
-            # Replace node's key by inorder successor's key and remove the
-            # successor.
-            key = self.kth_successor(1, node)
-            self.delete(key)
-            node.key = key
-
-    def _update_height(self, node):
-        parent = node.parent
-        self._balance(node)
         if parent:
-            self._update_height(parent)
+            self._balance(parent)
 
     def _rotate_left(self, node, heavy_child):
         """Rotate to make the node the left child of its ``heavy_child``."""
 
         parent = node.parent
+
         node.right = heavy_child.left
-        node.parent = heavy_child
-        heavy_child.left = node
+        node.update()
+
         heavy_child.parent = parent
+        heavy_child.left = node
+        heavy_child.update()
+
         if parent:
-            if heavy_child.key < parent.key:
-                parent.left = heavy_child
-            else:
-                parent.right = heavy_child
+            parent.add_child(heavy_child)
         else:
-            self._root = heavy_child
+            self.root = heavy_child
 
     def _rotate_right(self, node, heavy_child):
-        """Rotate to make the node the right child of its ``heavy_child``."""
+        """Rotate to make the node the right child of its ``heavy_child.``"""
 
         parent = node.parent
+
         node.left = heavy_child.right
-        node.parent = heavy_child
-        heavy_child.right = node
+        node.update()
+
         heavy_child.parent = parent
+        heavy_child.right = node
+        heavy_child.update()
+
         if parent:
-            if heavy_child.key < parent.key:
-                parent.left = heavy_child
-            else:
-                parent.right = heavy_child
+            parent.add_child(heavy_child)
         else:
-            self._root = heavy_child
+            self.root = heavy_child
 
+    def _update(self, node):
+        while node:
+            node.update()
 
-def bst_to_str(node, depth=0):
-    """Print a subtree rooted at a node at certain depth."""
+            # Updating the height may make the subtree rooted at ``node``
+            # unbalanced. Hence balance.
+            self._balance(node)
 
-    if depth:
-        prefix = '|   ' * depth + '|---'
-    else:
-        prefix = ''
-
-    node_str = prefix + '(' + str(node) + ')\n'
-
-    if node and not node.is_leaf():
-        node_str += bst_to_str(node.right, depth + 1)
-        node_str += bst_to_str(node.left, depth + 1)
-
-    return node_str
-
-
-def main():
-    avl = AVLTree()
-    for k in [1, 3, 4, 5, 6, 2, 0, 7, 8]:
-        avl.insert(k)
-    print avl
-    print '---'
-    print avl.kth_smallest_element(1)
-    print avl.kth_smallest_element(2)
-    print avl.kth_smallest_element(3)
-    print avl.kth_smallest_element(4)
-    print avl.kth_smallest_element(5)
-    print avl.kth_smallest_element(6)
-    print avl.kth_smallest_element(7)
-    print avl.kth_smallest_element(8)
-    print avl.kth_smallest_element(9)
-    print '---'
-    for key in [0, 1, 2, 3, 4, 5, 6, 7, 8]:
-        node = avl.search(key)
-        successors = []
-        for k in xrange(1, avl._root.size - key + 1):
-            successors.append(avl.kth_successor(k, node))
-        print 'successor of {0}: {1}'.format(key, successors)
-
-
-def main1():
-    avl = AVLTree()
-    for key in [41, 20, 65, 11, 50]:
-        avl.insert(key)
-    print avl
-    avl.insert(55)
-    print avl
-
-
-def test_delete():
-    keys = [41, 20, 65, 11, 26, 50, 23, 29, 55]
-
-    def get_avl():
-        avl = AVLTree()
-        for k in keys:
-            avl.insert(k)
-        return avl
-
-    for key in keys:
-        a = get_avl()
-        print '---'
-        print a
-        print 'Delete: ' + str(key)
-        a.delete(key)
-        print a
-
-if __name__ == '__main__':
-    test_delete()
-    # main1()
+            node = node.parent
