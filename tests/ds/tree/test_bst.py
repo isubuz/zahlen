@@ -3,30 +3,24 @@
 """
     Test case module for zahlen.ds.tree.bst
 
-    TODO (isubuz)
-    - TestBSTStructure is subclassed. However subclassing runs the test cases in
-    the base class multiple times. This should not happen.
-    - Construct a bigger tree in TestBSTStructure and update all tests.
-    - Add a tree with duplicate keys
-
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
 
 from collections import deque
-from zahlen.ds.tree.bst import BinarySearchTree, Node, TreeKeyError, \
+from zahlen.ds.tree.bst import BinarySearchTree, TreeKeyError, \
     SmallestElementIndexError, SuccessorIndexError
 
 import unittest
 
 
-class TreeStructure(unittest.TestCase):
-    def assert_tree(self, actual, expected_nodes):
-        """Assert tree structure.
+class BSTTestCase(unittest.TestCase):
+    """This class provides methods to test the equality of Binary search trees
+    and nodes in a tree.
+    """
 
-        The expected tree is formed out of the expected nodes tuples.
-        """
-        expected = self._construct_tree(expected_nodes)
+    def assert_tree(self, actual, expected):
+        """Assert if two trees are equal."""
 
         queue = deque()
         queue.append((actual.root, expected.root))
@@ -34,147 +28,132 @@ class TreeStructure(unittest.TestCase):
             actual_node, expected_node = queue.popleft()
             self.assert_node(actual_node, expected_node)
 
-            if expected_node.left:
-                queue.appendleft((actual_node.left, expected_node.left))
-            if expected_node.right:
-                queue.appendleft((actual_node.right, expected_node.right))
-
-    def assert_node_key(self, actual, expected):
-        """Assert key stored in node.
-
-        If the expected node is None, the actual node must be None. Else, their
-        key has to match.
-        """
-        if expected:
-            self.assertTrue(actual)
-            self.assertEqual(actual.key, expected.key)
-        else:
-            self.assertFalse(actual)
+            if expected_node:
+                if expected_node.left:
+                    queue.appendleft((actual_node.left, expected_node.left))
+                if expected_node.right:
+                    queue.appendleft((actual_node.right, expected_node.right))
 
     def assert_node(self, actual, expected):
-        """Assert key stored in node, node's parent, left and right children."""
+        """Assert if two nodes are equal."""
 
-        # Assert node key
-        self.assert_node_key(actual, expected)
+        if not expected:
+            self.assertIsNone(actual)
+        else:
+            self.assertIsNotNone(actual)
 
-        # Assert parent key
-        self.assert_node_key(actual.parent, expected.parent)
+            self.assertEqual(actual.key, expected.key)
+            self.assertEqual(actual.key_count, expected.key_count)
+            self.assertEqual(actual.size, expected.size)
 
-        # Assert left child key
-        self.assert_node_key(actual.left, expected.left)
-
-        # Assert right child key
-        self.assert_node_key(actual.right, expected.right)
-
-    def _construct_tree(self, node_tuples):
-        """Construct a tree out of the node tuples.
-
-        Each node tuple is of the form (node.key, node.left.key, node.right.key)
-        """
-
-        nodes = {}
-
-        for key, left_key, right_key in node_tuples:
-            if key in nodes:
-                node = nodes[key]
-            else:
-                node = nodes[key] = Node(key)
-
-            if left_key in nodes:
-                node.left.key_count += 1
-            else:
-                node.left = nodes[left_key] = Node(left_key)
-
-            if right_key in nodes:
-                node.right.key_count += 1
-            else:
-                node.right = nodes[right_key] = Node(right_key)
-
-        tree = BinarySearchTree()
-        tree.root = nodes[node_tuples[0][0]]
-
-        return tree
+            for act, exp in [(actual.left, expected.left),
+                             (actual.right, expected.right),
+                             (actual.parent, expected.parent)]:
+                if exp:
+                    self.assertIsNotNone(act)
+                    self.assertEqual(act.key, exp.key)
+                else:
+                    self.assertIsNone(act)
 
 
 class TestBSTStructure(unittest.TestCase):
-    """This class verifies the structure the BST i.e. verifies the leaf nodes
-    and the complete and non-complete internal nodes.
-    This provides a BST which is used in other test classes. Test cases which
-    use the BST provided by this class can safely assume the correctness of the
-    BST structure.
+    """This class contains test cases to verify the structure of the BST after
+    inserting one or more keys.
     """
 
     def setUp(self):
-        self.bst = _get_bst([8, 3, 2, 5, 4, 6, 12, 13, 10, 11])
+        self.bst = _get_bst([8, 3, 2, 5, 3, 4, 6, 1, 2, 12, 13, 6, 10, 11, 2])
 
     def test_leaf_nodes(self):
         root = self.bst.root
-        self.assertTrue(root.left.left.is_leaf())
-        self.assertTrue(root.left.right.left.is_leaf())
-        self.assertTrue(root.left.right.right.is_leaf())
-        self.assertTrue(root.right.left.right.is_leaf())
-        self.assertTrue(root.right.right.is_leaf())
+        self.assert_leaf_node(root.left.left.left, 1, 1, 2)
+        self.assert_leaf_node(root.left.right.left, 4, 1, 5)
+        self.assert_leaf_node(root.left.right.right, 6, 2, 5)
+        self.assert_leaf_node(root.right.left.right, 11, 1, 10)
+        self.assert_leaf_node(root.right.right, 13, 1, 12)
 
     def test_internal_complete_nodes(self):
         root = self.bst.root
-        self.assertTrue(root.is_complete())
-        self.assertTrue(root.left.is_complete())
-        self.assertTrue(root.left.right.is_complete())
-        self.assertTrue(root.right.is_complete())
+        self.assert_node(root.left, 3, 2, 6, 2, 5, 8)
+        self.assert_node(root.left.right, 5, 1, 3, 4, 6, 3)
+        self.assert_node(root.right, 12, 1, 4, 10, 13, 8)
 
     def test_internal_non_complete_node(self):
-        node = self.bst.root.right.left
-        self.assertTrue(not node.is_leaf() and not node.is_complete())
+        root = self.bst.root
+        self.assert_node(root.right.left, 10, 1, 2, right_key=11, parent_key=12)
+        self.assert_node(root.left.left, 2, 3, 2, left_key=1, parent_key=3)
+
+    def assert_node(self, actual, key, key_count, size, left_key=None,
+                    right_key=None, parent_key=None):
+        self.assertEqual(actual.key, key)
+        self.assertEqual(actual.key_count, key_count)
+        self.assertEqual(actual.size, size)
+
+        for ptr, val in [(actual.left, left_key),
+                         (actual.right, right_key),
+                         (actual.parent, parent_key)]:
+            if val:
+                self.assertEqual(ptr.key, val)
+            else:
+                self.assertIsNone(ptr)
+
+    def assert_leaf_node(self, actual, key, key_count, parent_key):
+        self.assert_node(actual, key, key_count, 1, parent_key=parent_key)
 
 
-class TestDelete(TestBSTStructure):
-    def test_key_not_exists(self):
+class TestDelete(BSTTestCase):
+    def setUp(self):
+        self.bst = _get_bst([8, 3, 2, 5, 3, 4, 6, 1, 2, 12, 13, 6, 10, 11, 2])
+
+    def test_del_key_not_exists(self):
         self.assertRaises(TreeKeyError, self.bst.delete, 99)
 
-    def test_empty_tree_after_delete(self):
+    def test_del_empty_tree_after_delete(self):
         bst = _get_bst([10])
         bst.delete(10)
         self.assertFalse(bst.root)
 
-    def test_left_leaf_node(self):
-        self.bst.delete(2)
-        self.assertFalse(self.bst.root.left.left)
+    def test_del_left_leaf_node(self):
+        self.bst.delete(1)
+        expected = _get_bst([8, 3, 2, 5, 3, 4, 6, 2, 12, 13, 6, 10, 11, 2])
+        self.assert_tree(self.bst, expected)
 
-    def test_right_leaf_node(self):
+    def test_del_right_leaf_node(self):
         self.bst.delete(11)
-        self.assertFalse(self.bst.root.right.left.right)
+        expected = _get_bst([8, 3, 2, 5, 3, 4, 6, 1, 2, 12, 13, 6, 10, 2])
+        self.assert_tree(self.bst, expected)
 
-    def test_complete_node_successor_is_right_child_and_leaf_node(self):
+    def test_del_repeated_leaf_node(self):
+        """Test that only 1 occurrence of the repeated leaf node is deleted."""
+        self.bst.delete(6)
+        expected = _get_bst([8, 3, 2, 5, 3, 4, 6, 1, 2, 12, 13, 10, 11, 2])
+        self.assert_tree(self.bst, expected)
+
+    def test_del_complete_node_successor_is_right_child_and_leaf_node(self):
         self.bst.delete(12)
-        node = self.bst.root.right
-        self.assertEqual(node.key, 13)
-        self.assertEqual(node.left.key, 10)
-        self.assertFalse(node.right)
+        expected = _get_bst([8, 3, 2, 5, 3, 4, 6, 1, 2, 13, 6, 10, 11, 2])
+        self.assert_tree(self.bst, expected)
 
-    def test_complete_node_successor_is_leaf_node(self):
+    def test_del_complete_node_successor_is_leaf_node(self):
         self.bst.delete(3)
-        node = self.bst.root.left
-        self.assertEqual(node.key, 4)
-        self.assertEqual(node.right.key, 5)
-        self.assertFalse(node.right.left)
+        self.bst.delete(3)  # Delete both occurrences of 3
+        expected = _get_bst([8, 4, 2, 5, 6, 1, 2, 12, 13, 6, 10, 11, 2])
+        self.assert_tree(self.bst, expected)
 
-    def test_complete_node_successor_is_internal_non_complete_node(self):
+    def test_del_complete_node_successor_is_repeated_node(self):
+        self.bst.delete(5)
+        expected = _get_bst([8, 3, 2, 3, 6, 4, 1, 2, 12, 13, 6, 10, 11, 2])
+        self.assert_tree(self.bst, expected)
+
+    def test_del_complete_node_successor_is_internal_non_complete_node(self):
         self.bst.delete(8)
-        node = self.bst.root
-        self.assertEqual(node.key, 10)
-        self.assertEqual(node.right.key, 12)
-        self.assertEqual(node.right.left.key, 11)
+        expected = _get_bst([10, 3, 2, 5, 3, 4, 6, 1, 2, 12, 13, 6, 11, 2])
+        self.assert_tree(self.bst, expected)
 
-    def test_non_complete_node_no_left_child(self):
+    def test_del_non_complete_node_no_left_child(self):
         self.bst.delete(10)
-        parent = self.bst.root.right
-        self.assertEqual(parent.left.key, 11)
-        self.assertFalse(parent.left.left)
-        self.assertFalse(parent.left.right)
-
-    # TODO (isubuz) Construct a bigger tree and add more tests.
-        # test_non_complete_node_no_right_child()
-        # test_non_complete_node_right_child_complete()/non_complete()/leaf()
+        expected = _get_bst([8, 3, 2, 5, 3, 4, 6, 1, 2, 12, 13, 6, 11, 2])
+        self.assert_tree(self.bst, expected)
 
 
 class TestRootNodeInsert(unittest.TestCase):
@@ -194,93 +173,64 @@ class TestRootNodeInsert(unittest.TestCase):
 
 class TestInsert(unittest.TestCase):
     def test_path_left(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 2])
+        bst = _get_bst([10, 2])
         self.assertEqual(bst.root.left.key, 2)
         self.assertIsNone(bst.root.right)
 
     def test_path_right(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 12])
+        bst = _get_bst([10, 12])
         self.assertIsNone(bst.root.left)
         self.assertEqual(bst.root.right.key, 12)
 
     def test_path_left_right_left(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 2, 12, 6, 7])
+        bst = _get_bst([10, 2, 12, 6, 7])
         bst.insert(4)
         self.assertEqual(bst.root.left.right.left.key, 4)
 
     def test_path_left_right_right(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 2, 12, 6, 4])
+        bst = _get_bst([10, 2, 12, 6, 4])
         bst.insert(7)
         self.assertEqual(bst.root.left.right.right.key, 7)
 
     def test_path_right_right_right(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 15, 12, 18, 16])
+        bst = _get_bst([10, 15, 12, 18, 16])
         bst.insert(24)
         self.assertEqual(bst.root.right.right.right.key, 24)
 
     def test_path_right_right_left(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 15, 12, 18, 24])
+        bst = _get_bst([10, 15, 12, 18, 24])
         bst.insert(16)
         self.assertEqual(bst.root.right.right.left.key, 16)
 
     def test_duplicate_root(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 10, 10, 10])
+        bst = _get_bst([10, 10, 10, 10])
         self.assertEqual(bst.root.key, 10)
         self.assertEqual(bst.root.key_count, 4)
         self.assertIsNone(bst.root.left)
         self.assertIsNone(bst.root.right)
 
     def test_duplicate_leaf_node(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 2, 12, 5])
+        bst = _get_bst([10, 2, 12, 5])
         bst.insert(12)
         self.assertTrue(bst.root.right.is_leaf())
         self.assertEqual(bst.root.right.key_count, 2)
 
     def test_duplicate_internal_complete_node(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 2, 12, 6, 4, 7])
+        bst = _get_bst([10, 2, 12, 6, 4, 7])
         bst.insert(6)
         self.assertEqual(bst.root.left.right.key, 6)
         self.assertEqual(bst.root.left.right.key_count, 2)
 
     def test_duplicate_internal_non_complete_node(self):
-        bst = BinarySearchTree()
-        _insert(bst, [10, 2, 12, 6, 4, 7])
+        bst = _get_bst([10, 2, 12, 6, 4, 7])
         bst.insert(2)
         self.assertEqual(bst.root.left.key, 2)
         self.assertEqual(bst.root.left.key_count, 2)
 
 
-class TestNodeSizeAfterInsert(TestBSTStructure):
-    def test_tree_with_single_node(self):
-        bst = _get_bst([10])
-        self.assertEqual(bst.root.size, 1)
-
-    def test_leaf_node(self):
-        node = self.bst.root.left.right.left
-        self.assertEqual(node.size, 1)
-
-    def test_internal_complete_node_root(self):
-        self.assertEqual(self.bst.root.size, 10)
-
-    def test_internal_complete_node(self):
-        node = self.bst.root.right
-        self.assertEqual(node.size, 4)
-
-    def test_internal_non_complete_node(self):
-        node = self.bst.root.right.left
-        self.assertEqual(node.size, 2)
-
-
-class TestKthSmallestKey(TestBSTStructure):
+class TestKthSmallestKey(unittest.TestCase):
+    def setUp(self):
+        self.bst = _get_bst([8, 3, 2, 5, 4, 6, 12, 13, 10, 11])
 
     def test_empty_tree_exception(self):
         bst = BinarySearchTree()
@@ -327,7 +277,10 @@ class TestKthSmallestKey(TestBSTStructure):
         self.assertEqual(self.bst.kth_smallest_key(7), 10)
 
 
-class TestKthSuccessor(TestBSTStructure):
+class TestKthSuccessor(unittest.TestCase):
+    def setUp(self):
+        self.bst = _get_bst([8, 3, 2, 5, 4, 6, 12, 13, 10, 11])
+
     def test_empty_tree_exception(self):
         bst = BinarySearchTree()
         self.assertRaises((TreeKeyError, SuccessorIndexError),
@@ -421,42 +374,38 @@ class TestSort(unittest.TestCase):
         self.assertListEqual(bst.sorted_keys(), [])
 
     def test_tree_with_single_element(self):
-        bst = BinarySearchTree()
-        bst.insert(10)
+        bst = _get_bst([10])
         self.assertListEqual(bst.sorted_keys(), [10])
 
     def test_tree_with_multiple_elements(self):
-        bst = BinarySearchTree()
-        _insert(bst, [2, 1, 4, 5, 3])
+        bst = _get_bst([2, 1, 4, 5, 3])
         self.assertListEqual(bst.sorted_keys(), [1, 2, 3, 4, 5])
 
     def test_tree_with_multiple_elements_and_duplicates(self):
-        bst = BinarySearchTree()
-        _insert(bst, [2, 1, 4, 5, 3, 1, 1, 6, 4])
+        bst = _get_bst([2, 1, 4, 5, 3, 1, 1, 6, 4])
         self.assertListEqual(bst.sorted_keys(), [1, 1, 1, 2, 3, 4, 4, 5, 6])
 
     def test_tree_with_all_duplicates(self):
-        bst = BinarySearchTree()
-        _insert(bst, [2, 2, 2, 2, 2, 2, 2])
+        bst = _get_bst([2, 2, 2, 2, 2, 2, 2])
         self.assertListEqual(bst.sorted_keys(), [2, 2, 2, 2, 2, 2, 2])
 
     def test_at_leaf_node(self):
-        bst = BinarySearchTree()
-        _insert(bst, [2, 1, 4, 5, 3])
+        bst = _get_bst([2, 1, 4, 5, 3])
         self.assertListEqual(bst.sorted_keys(bst.root.right.left), [3])
 
     def test_at_internal_complete_node(self):
-        bst = BinarySearchTree()
-        _insert(bst, [2, 1, 4, 5, 3])
+        bst = _get_bst([2, 1, 4, 5, 3])
         self.assertListEqual(bst.sorted_keys(bst.root.right), [3, 4, 5])
 
     def test_at_internal_non_complete_node(self):
-        bst = BinarySearchTree()
-        _insert(bst, [2, 1, 4, 5, 3, 6])
+        bst = _get_bst([2, 1, 4, 5, 3, 6])
         self.assertListEqual(bst.sorted_keys(bst.root.right.right), [5, 6])
 
 
-class TestSuccessorCount(TestBSTStructure):
+class TestSuccessorCount(unittest.TestCase):
+    def setUp(self):
+        self.bst = _get_bst([8, 3, 2, 5, 4, 6, 12, 13, 10, 11])
+
     def test_key_not_in_tree(self):
         self.assertRaises(TreeKeyError, self.bst.successor_count, 99)
 
@@ -467,15 +416,13 @@ class TestSuccessorCount(TestBSTStructure):
 
 
 def _get_bst(keys):
+    """Return a BST after inserting the input keys."""
+
     bst = BinarySearchTree()
     for key in keys:
         bst.insert(key)
     return bst
 
-
-def _insert(bst, keys):
-    for key in keys:
-        bst.insert(key)
 
 if __name__ == '__main__':
     unittest.main()
