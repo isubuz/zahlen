@@ -15,6 +15,9 @@ Feel free to contribute and add more implementations.
 * [AVL Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/avl.py)
 * [Binary Search Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/bst.py)
 * Bit Indexed Tree (Fenwick Tree)
+* Min-Max Heap
+* Min-Max-Median Heap
+* Order Statistics Tree
 * [Segment Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/segment_tree.py)
 * Suffix Tree
 
