@@ -36,13 +36,16 @@ class SegmentTree(object):
 
     def __init__(self, elements):
 
-        # Store the indices of the minimum value for every range index. A range
-        # index is the index of the node in the heap which maps to a particular
-        # range.
-        self._range_min_indices = {}
+        if not elements:
+            raise ValueError('Expected a non-empty list of input elements')
+
+        # Store the index of the minimum value for every range index. A range
+        # index is the index of the node in the heap which corresponds to a
+        # particular range.
+        self._min_range_indices = {}
 
         # Stores the range indices of all the leaves in the heap.
-        self._leaves = {}
+        self._leaves_range_indices = {}
 
         self._size = len(elements)
         self._elements = elements
@@ -58,7 +61,7 @@ class SegmentTree(object):
         queue.append((0, 0, self._size - 1))
         while queue:
             range_index, start, end = queue.popleft()
-            min_index = self._range_min_indices[range_index]
+            min_index = self._min_range_indices[range_index]
             items.append((start, end, min_index, self._elements[min_index]))
 
             if start != end:
@@ -85,7 +88,7 @@ class SegmentTree(object):
             print 'Invalid index'  # Or throw error
             return
 
-        range_index = self._leaves[index]
+        range_index = self._leaves_range_indices[index]
         self._elements[index] = element
 
         while True:
@@ -93,12 +96,12 @@ class SegmentTree(object):
             if parent_range_index < 0:
                 break
 
-            parent_min = self._range_min_indices[parent_range_index]
+            parent_min = self._min_range_indices[parent_range_index]
 
             if element > self._elements[parent_min]:
                 break
             else:
-                self._range_min_indices[parent_range_index] = index
+                self._min_range_indices[parent_range_index] = index
                 range_index = parent_range_index
 
     def query(self, start, end, range_index=0, range_start=0, range_end=None):
@@ -108,9 +111,9 @@ class SegmentTree(object):
             range_end = self._size - 1
 
         if range_start == start and range_end == end:
-            return self._range_min_indices[range_index]
+            return self._min_range_indices[range_index]
         elif start == end:
-            return self._range_min_indices[self._leaves[start]]
+            return self._min_range_indices[self._leaves_range_indices[start]]
         else:
             mid = (range_start + range_end) / 2
             left_range_index = 2 * range_index + 1
@@ -141,8 +144,8 @@ class SegmentTree(object):
         """
 
         if start == end:
-            self._leaves[start] = range_index
-            self._range_min_indices[range_index] = start
+            self._leaves_range_indices[start] = range_index
+            self._min_range_indices[range_index] = start
         else:
             mid = (start + end) / 2
             left_range_index = 2 * range_index + 1
@@ -153,12 +156,12 @@ class SegmentTree(object):
             self._build(right_range_index, mid + 1, end)
 
             # Calculate the range minimum index for the current range.
-            left_min_index = self._range_min_indices[left_range_index]
+            left_min_index = self._min_range_indices[left_range_index]
             left_range_min = self._elements[left_min_index]
-            right_min_index = self._range_min_indices[right_range_index]
+            right_min_index = self._min_range_indices[right_range_index]
             right_range_min = self._elements[right_min_index]
 
-            self._range_min_indices[range_index] = left_min_index \
+            self._min_range_indices[range_index] = left_min_index \
                 if left_range_min < right_range_min else right_min_index
 
     @staticmethod
