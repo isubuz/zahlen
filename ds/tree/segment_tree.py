@@ -19,6 +19,10 @@ from collections import deque
 class SegmentTree(object):
     """Construct a segment tree.
 
+    Note that this implementation of a Segment Tree does not support addition
+    of new elements in the tree. All elements must be supplied in a list during
+    the segment tree creation. An element at a specified index can be updated.
+
     Example usage::
         elements = [2, 1, 3, 6, 0, -1, -2]
 
@@ -44,7 +48,8 @@ class SegmentTree(object):
         # particular range.
         self._min_range_indices = {}
 
-        # Stores the range indices of all the leaves in the heap.
+        # Stores the range indices of all the leaves in the heap i.e. the
+        # positions of the leaves in the heap.
         self._leaves_range_indices = {}
 
         self._size = len(elements)
@@ -105,16 +110,33 @@ class SegmentTree(object):
                 range_index = parent_range_index
 
     def query(self, start, end, range_index=0, range_start=0, range_end=None):
-        """Return the index of the minimum within the specified range."""
+        """Return the index of the minimum within the specified range.
+
+        The returned index is the index of an element in the list used to create
+        the segment tree. If the more than one minimum's within a range,
+        the highest index is returned.
+
+        :param start: range start index
+        :param end: range end index
+        """
+
+        if not 0 <= start <= end:
+            raise ValueError("Invalid start index:" + str(start))
+
+        if not start <= end < self._size:
+            raise ValueError("Invalid end index: " + str(end))
 
         if not range_end:
             range_end = self._size - 1
 
         if range_start == start and range_end == end:
+            # Minimum index already computed and stored in node.
             return self._min_range_indices[range_index]
         elif start == end:
+            # Leaf node
             return self._min_range_indices[self._leaves_range_indices[start]]
         else:
+            # Non-leaf node and compute the minimum index at runtime.
             mid = (range_start + range_end) / 2
             left_range_index = 2 * range_index + 1
             right_range_index = left_range_index + 1
@@ -139,14 +161,17 @@ class SegmentTree(object):
     def _build(self, range_index, start, end):
         """Build the heap structure for the segment tree.
 
-        Each index in the heap stores the index of the minimum value within
-        a range.
+        Each node in the heap represents a range and store the index of the
+        minimum value within that range. The index referred is the index in the
+        list supplied during the segment tree construction.
         """
 
         if start == end:
+            # Leaf node
             self._leaves_range_indices[start] = range_index
             self._min_range_indices[range_index] = start
         else:
+            # Internal node
             mid = (start + end) / 2
             left_range_index = 2 * range_index + 1
             right_range_index = left_range_index + 1
@@ -173,64 +198,3 @@ class SegmentTree(object):
         else:
             parent_range_index = (range_index - 1) / 2  # parent of left child
         return parent_range_index
-
-
-def test1():
-    st = SegmentTree(9)
-    print st
-    st.update(0, 2)
-    st.update(1, 1)
-    st.update(2, 6)
-    st.update(3, 3)
-    st.update(4, 5)
-    st.update(5, 0)
-    st.update(6, 4)
-    st.update(7, -1)
-    st.update(8, -2)
-    print st
-
-    print '---'
-    print st.query(0, 7)
-    print st.query(0, 3)
-    print st.query(4, 7)
-    print st.query(0, 1)
-    print st.query(2, 3)
-    print st.query(4, 5)
-    print st.query(6, 7)
-    print st.query(0, 0)
-    print st.query(1, 1)
-    print st.query(2, 2)
-    print st.query(3, 3)
-    print st.query(4, 4)
-    print st.query(5, 5)
-    print st.query(6, 6)
-    print st.query(7, 7)
-    print st.query(0, 5)
-    print st.query(2, 7)
-    print st.query(1, 3)
-    print st.query(2, 4)
-    print st.query(5, 7)
-    print st.query(5, 6)
-    print st.query(0, 8)
-    print st.query(5, 8)
-
-
-def test2():
-    st = SegmentTree([2, 1, 6, 3, 5, 0, 4, -1, -2])
-    print st
-    st.update(4, -3)
-    print st
-    st.update(8, 7)
-    print st
-
-
-def test3():
-    st = SegmentTree([2, 1, 6, 3, -3, 0, 4, -1, -2])
-    print st.query(0, 8)
-    print st.query(0, 6)
-    print st.query(5, 8)
-    print st.query(5, 7)
-    print st.query(0, 3)
-
-if __name__ == '__main__':
-    test3()

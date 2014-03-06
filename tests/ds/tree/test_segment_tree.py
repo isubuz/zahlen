@@ -1,5 +1,5 @@
 """
-    Test case module for
+    Test case module for zahlen.ds.tree.segment_tree
 
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
@@ -89,7 +89,202 @@ class TestQuery(unittest.TestCase):
 
     These tests assumes the correctness of the Segment Tree construction.
     """
-    pass
+
+    def test_sg_with_1_element(self):
+        sg = SegmentTree([10])
+        self.assertEqual(sg.query(0, 0), 0)
+
+    def test_all_equal_even_elements(self):
+        sg = SegmentTree([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        self.assertEqual(sg.query(0, 9), 9)
+        self.assertEqual(sg.query(1, 8), 8)
+        self.assertEqual(sg.query(2, 7), 7)
+        self.assertEqual(sg.query(3, 6), 6)
+        self.assertEqual(sg.query(4, 5), 5)
+        self.assertEqual(sg.query(5, 5), 5)
+
+    def test_all_equal_odd_elements(self):
+        sg = SegmentTree([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        self.assertEqual(sg.query(0, 10), 10)
+        self.assertEqual(sg.query(1, 8), 8)
+        self.assertEqual(sg.query(2, 7), 7)
+        self.assertEqual(sg.query(3, 6), 6)
+        self.assertEqual(sg.query(4, 5), 5)
+        self.assertEqual(sg.query(5, 5), 5)
+
+    def test_sorted_elements(self):
+        sg = SegmentTree([1, 2, 3, 4, 5, 6, 7])
+        self.assertEqual(sg.query(0, 0), 0)
+        self.assertEqual(sg.query(0, 1), 0)
+        self.assertEqual(sg.query(0, 2), 0)
+        self.assertEqual(sg.query(1, 3), 1)
+        self.assertEqual(sg.query(1, 4), 1)
+        self.assertEqual(sg.query(2, 5), 2)
+        self.assertEqual(sg.query(3, 6), 3)
+
+    def test_reverse_sorted_elements(self):
+        sg = SegmentTree([8, 7, 6, 5, 4, 3, 2, 1])
+        self.assertEqual(sg.query(0, 0), 0)
+        self.assertEqual(sg.query(0, 1), 1)
+        self.assertEqual(sg.query(0, 2), 2)
+        self.assertEqual(sg.query(2, 3), 3)
+        self.assertEqual(sg.query(2, 4), 4)
+        self.assertEqual(sg.query(3, 5), 5)
+        self.assertEqual(sg.query(3, 6), 6)
+        self.assertEqual(sg.query(4, 7), 7)
+
+    def test_exp_start_less_than_0(self):
+        sg = SegmentTree([2, 1, 0, 3])
+        self.assertRaises(ValueError, sg.query, -1, 2)
+
+    def test_exp_start_greater_than_end(self):
+        sg = SegmentTree([2, 1, 0, 3])
+        self.assertRaises(ValueError, sg.query, 3, 1)
+
+    def test_exp_end_greater_than_max_size(self):
+        sg = SegmentTree([2, 1, 0, 3])
+        self.assertRaises(ValueError, sg.query, 1, 6)
+
+
+class TestQueryEvenElements(unittest.TestCase):
+    """Test cases to test query() on a segment tree with even no. of elements.
+
+    These tests assumes the correctness of the Segment Tree construction.
+    """
+
+    def setUp(self):
+        self.sg = SegmentTree([3, -1, 1, -2, 6, 5, 0, 2])
+
+    def test_even_ranges(self):
+        """The range is same as the range represented by a node i.e. minimum
+        index is stored in the heap node. query() simply traverses down the
+        tree to find the correct node.
+        """
+
+        self.assertEqual(self.sg.query(0, 7), 3)
+        self.assertEqual(self.sg.query(0, 3), 3)
+        self.assertEqual(self.sg.query(4, 7), 6)
+        self.assertEqual(self.sg.query(0, 1), 1)
+        self.assertEqual(self.sg.query(2, 3), 3)
+        self.assertEqual(self.sg.query(4, 5), 5)
+        self.assertEqual(self.sg.query(6, 7), 6)
+        self.assertEqual(self.sg.query(0, 0), 0)
+        self.assertEqual(self.sg.query(1, 1), 1)
+        self.assertEqual(self.sg.query(2, 2), 2)
+        self.assertEqual(self.sg.query(3, 3), 3)
+        self.assertEqual(self.sg.query(4, 4), 4)
+        self.assertEqual(self.sg.query(5, 5), 5)
+        self.assertEqual(self.sg.query(6, 6), 6)
+        self.assertEqual(self.sg.query(7, 7), 7)
+
+    def test_odd_ranges(self):
+        """The range start and end indices are not in the same node. query() has
+        to perform additional comparisons at runtime to find the minimum index.
+        """
+
+        self.assertEqual(self.sg.query(0, 2), 1)
+        self.assertEqual(self.sg.query(0, 3), 3)
+        self.assertEqual(self.sg.query(0, 4), 3)
+        self.assertEqual(self.sg.query(0, 5), 3)
+        self.assertEqual(self.sg.query(0, 6), 3)
+        self.assertEqual(self.sg.query(0, 7), 3)
+
+        self.assertEqual(self.sg.query(1, 2), 1)
+        self.assertEqual(self.sg.query(1, 3), 3)
+        self.assertEqual(self.sg.query(1, 4), 3)
+        self.assertEqual(self.sg.query(1, 5), 3)
+        self.assertEqual(self.sg.query(1, 6), 3)
+        self.assertEqual(self.sg.query(1, 7), 3)
+
+        self.assertEqual(self.sg.query(2, 4), 3)
+        self.assertEqual(self.sg.query(2, 5), 3)
+        self.assertEqual(self.sg.query(2, 6), 3)
+        self.assertEqual(self.sg.query(2, 7), 3)
+
+        self.assertEqual(self.sg.query(3, 4), 3)
+        self.assertEqual(self.sg.query(3, 5), 3)
+        self.assertEqual(self.sg.query(3, 6), 3)
+        self.assertEqual(self.sg.query(3, 7), 3)
+
+        self.assertEqual(self.sg.query(4, 6), 6)
+        self.assertEqual(self.sg.query(4, 7), 6)
+
+        self.assertEqual(self.sg.query(5, 6), 6)
+        self.assertEqual(self.sg.query(5, 7), 6)
+
+
+class TestQueryOddElements(unittest.TestCase):
+    """Test cases to test query() on a segment tree with odd no. of elements.
+
+    These tests assumes the correctness of the Segment Tree construction.
+    """
+
+    def setUp(self):
+        self.sg = SegmentTree([2, 1, 3, 6, -2, 1, 0, -2, -1])
+
+    def test_even_ranges(self):
+        """The range is same as the range represented by a node i.e. minimum
+        index is stored in the heap node. query() simply traverses down the
+        tree to find the correct node.
+        """
+
+        self.assertEqual(self.sg.query(0, 8), 7)
+        self.assertEqual(self.sg.query(0, 4), 4)
+        self.assertEqual(self.sg.query(5, 8), 7)
+        self.assertEqual(self.sg.query(0, 2), 1)
+        self.assertEqual(self.sg.query(3, 4), 4)
+        self.assertEqual(self.sg.query(5, 6), 6)
+        self.assertEqual(self.sg.query(7, 8), 7)
+        self.assertEqual(self.sg.query(0, 1), 1)
+        self.assertEqual(self.sg.query(2, 2), 2)
+        self.assertEqual(self.sg.query(3, 3), 3)
+        self.assertEqual(self.sg.query(4, 4), 4)
+        self.assertEqual(self.sg.query(5, 5), 5)
+        self.assertEqual(self.sg.query(6, 6), 6)
+        self.assertEqual(self.sg.query(7, 7), 7)
+        self.assertEqual(self.sg.query(8, 8), 8)
+
+    def test_odd_ranges(self):
+        """The range start and end indices are not in the same node. query() has
+        to perform additional comparisons at runtime to find the minimum index.
+        """
+
+        self.assertEqual(self.sg.query(0, 3), 1)
+        self.assertEqual(self.sg.query(0, 4), 4)
+        self.assertEqual(self.sg.query(0, 5), 4)
+        self.assertEqual(self.sg.query(0, 6), 4)
+        self.assertEqual(self.sg.query(0, 7), 7)
+
+        self.assertEqual(self.sg.query(1, 2), 1)
+        self.assertEqual(self.sg.query(1, 3), 1)
+        self.assertEqual(self.sg.query(1, 4), 4)
+        self.assertEqual(self.sg.query(1, 5), 4)
+        self.assertEqual(self.sg.query(1, 6), 4)
+        self.assertEqual(self.sg.query(1, 7), 7)
+        self.assertEqual(self.sg.query(1, 8), 7)
+
+        self.assertEqual(self.sg.query(2, 3), 2)
+        self.assertEqual(self.sg.query(2, 4), 4)
+        self.assertEqual(self.sg.query(2, 5), 4)
+        self.assertEqual(self.sg.query(2, 6), 4)
+        self.assertEqual(self.sg.query(2, 7), 7)
+        self.assertEqual(self.sg.query(2, 8), 7)
+
+        self.assertEqual(self.sg.query(3, 5), 4)
+        self.assertEqual(self.sg.query(3, 6), 4)
+        self.assertEqual(self.sg.query(3, 7), 7)
+        self.assertEqual(self.sg.query(3, 8), 7)
+
+        self.assertEqual(self.sg.query(4, 5), 4)
+        self.assertEqual(self.sg.query(4, 6), 4)
+        self.assertEqual(self.sg.query(4, 7), 7)
+        self.assertEqual(self.sg.query(4, 8), 7)
+
+        self.assertEqual(self.sg.query(5, 7), 7)
+        self.assertEqual(self.sg.query(5, 8), 7)
+
+        self.assertEqual(self.sg.query(6, 7), 7)
+        self.assertEqual(self.sg.query(6, 8), 7)
 
 
 class TestUpdate(unittest.TestCase):
