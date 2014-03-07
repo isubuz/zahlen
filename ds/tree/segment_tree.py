@@ -109,7 +109,7 @@ class SegmentTree(object):
                 self._min_range_indices[parent_range_index] = index
                 range_index = parent_range_index
 
-    def query(self, start, end, range_index=0, range_start=0, range_end=None):
+    def query(self, start, end):
         """Return the index of the minimum within the specified range.
 
         The returned index is the index of an element in the list used to create
@@ -126,37 +126,7 @@ class SegmentTree(object):
         if not start <= end < self._size:
             raise ValueError("Invalid end index: " + str(end))
 
-        if not range_end:
-            range_end = self._size - 1
-
-        if range_start == start and range_end == end:
-            # Minimum index already computed and stored in node.
-            return self._min_range_indices[range_index]
-        elif start == end:
-            # Leaf node
-            return self._min_range_indices[self._leaves_range_indices[start]]
-        else:
-            # Non-leaf node and compute the minimum index at runtime.
-            mid = (range_start + range_end) / 2
-            left_range_index = 2 * range_index + 1
-            right_range_index = left_range_index + 1
-
-            if end <= mid:
-                return self.query(start, end, left_range_index, range_start,
-                                  mid)
-            elif start > mid:
-                return self.query(start, end, right_range_index, mid + 1,
-                                  range_end)
-            else:
-                left_min_index = self.query(start, mid, left_range_index,
-                                            range_start, mid)
-                right_min_index = self.query(mid + 1, end, right_range_index,
-                                             mid + 1, range_end)
-                if self._elements[left_min_index] < \
-                        self._elements[right_min_index]:
-                    return left_min_index
-                else:
-                    return right_min_index
+        return self._query_from_range_index(start, end, 0, 0, self._size - 1)
 
     def _build(self, range_index, start, end):
         """Build the heap structure for the segment tree.
@@ -198,3 +168,56 @@ class SegmentTree(object):
         else:
             parent_range_index = (range_index - 1) / 2  # parent of left child
         return parent_range_index
+
+    def _query_from_range_index(self, start, end, range_index, range_start,
+                                range_end):
+        """Start the query from a certain range index i.e. start the search from
+        a certain node in the heap.
+
+        :param start: starting index of desired range
+        :param end: ending index of desired range
+        :param range_index: index of the node to start the search from
+        :param range_start: actual starting index of the range represented by
+            the node at ``range_index``
+        :param range_end: actual ending index of the range represented by the
+            node at ``range_index``
+
+        E.g. if range_index is 0 i.e. the root node, range_start must be 0 and
+        range_end must be self._size - 1. If we can calculate range_start and
+        range_end from the range_index, these parameters are not required.
+        """
+
+        if range_start == start and range_end == end:
+            # Minimum index already computed and stored in node.
+            return self._min_range_indices[range_index]
+        elif start == end:
+            # Leaf node
+            return self._min_range_indices[self._leaves_range_indices[start]]
+        else:
+            # Non-leaf node and compute the minimum index at runtime.
+            mid = (range_start + range_end) / 2
+            left_range_index = 2 * range_index + 1
+            right_range_index = left_range_index + 1
+
+            if end <= mid:
+                return self._query_from_range_index(start, end,
+                                                    left_range_index,
+                                                    range_start, mid)
+            elif start > mid:
+                return self._query_from_range_index(start, end,
+                                                    right_range_index, mid + 1,
+                                                    range_end)
+            else:
+                left_min_index = self._query_from_range_index(start, mid,
+                                                              left_range_index,
+                                                              range_start, mid)
+                right_min_index = \
+                    self._query_from_range_index(mid + 1, end,
+                                                 right_range_index,
+                                                 mid + 1, range_end)
+                if self._elements[left_min_index] < \
+                        self._elements[right_min_index]:
+                    return left_min_index
+                else:
+                    return right_min_index
+
