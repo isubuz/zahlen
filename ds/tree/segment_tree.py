@@ -7,7 +7,8 @@
     This module implements the Segment Tree data structure.
 
     TODO (isubuz)
-    - Support insertion of new elements in the segment tree.
+    - Support insertion of new elements in the segment tree (if possible).
+    - Range updates
 
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
@@ -87,11 +88,14 @@ class SegmentTree(object):
         return sg_tree_str
 
     def update(self, index, element):
-        """Update an element at the specified index."""
+        """Update an element at the specified index.
 
-        if index < 0 or index > self._size - 1:
-            print 'Invalid index'  # Or throw error
-            return
+        On updating the element, the minimum index for the various ranges are
+        recomputed.
+        """
+
+        if not 0 <= index <= self._size - 1:
+            raise IndexError('Invalid index: {0}'.format(index))
 
         range_index = self._leaves_range_indices[index]
         self._elements[index] = element
@@ -121,12 +125,12 @@ class SegmentTree(object):
         """
 
         if not 0 <= start <= end:
-            raise ValueError("Invalid start index:" + str(start))
+            raise IndexError("Invalid start index:" + str(start))
 
         if not start <= end < self._size:
-            raise ValueError("Invalid end index: " + str(end))
+            raise IndexError("Invalid end index: " + str(end))
 
-        return self._query_from_range_index(start, end, 0, 0, self._size - 1)
+        return self._query_from_root(start, end, 0, 0, self._size - 1)
 
     def _build(self, range_index, start, end):
         """Build the heap structure for the segment tree.
@@ -169,55 +173,53 @@ class SegmentTree(object):
             parent_range_index = (range_index - 1) / 2  # parent of left child
         return parent_range_index
 
-    def _query_from_range_index(self, start, end, range_index, range_start,
-                                range_end):
-        """Start the query from a certain range index i.e. start the search from
-        a certain node in the heap.
+    def _query_from_root(self, start, end, root, range_start, range_end):
+        """Start the query from a certain root node in the heap.
 
         :param start: starting index of desired range
         :param end: ending index of desired range
-        :param range_index: index of the node to start the search from
+        :param root: index of the root node to start the search from. This may
+            be the root in a subtree.
         :param range_start: actual starting index of the range represented by
-            the node at ``range_index``
+            the node at ``root``
         :param range_end: actual ending index of the range represented by the
-            node at ``range_index``
+            node at ``root``
 
-        E.g. if range_index is 0 i.e. the root node, range_start must be 0 and
-        range_end must be self._size - 1. If we can calculate range_start and
-        range_end from the range_index, these parameters are not required.
+        E.g. if root is 0 i.e. the root node for the entire heap, range_start
+        must be 0 and range_end must be self._size - 1. If we can calculate
+        range_start and range_end from the range_index, these parameters are
+        not required.
         """
 
         if range_start == start and range_end == end:
-            # Minimum index already computed and stored in node.
-            return self._min_range_indices[range_index]
+            # Minimum index already computed and stored in root
+            return self._min_range_indices[root]
         elif start == end:
             # Leaf node
             return self._min_range_indices[self._leaves_range_indices[start]]
         else:
             # Non-leaf node and compute the minimum index at runtime.
             mid = (range_start + range_end) / 2
-            left_range_index = 2 * range_index + 1
+            left_range_index = 2 * root + 1
             right_range_index = left_range_index + 1
 
             if end <= mid:
-                return self._query_from_range_index(start, end,
-                                                    left_range_index,
-                                                    range_start, mid)
+                # Minimum index is in the left subtree at ``root``
+                return self._query_from_root(start, end, left_range_index,
+                                             range_start, mid)
             elif start > mid:
-                return self._query_from_range_index(start, end,
-                                                    right_range_index, mid + 1,
-                                                    range_end)
+                # Minimum index is in the right subtree rooted at ``root``
+                return self._query_from_root(start, end, right_range_index,
+                                             mid + 1, range_end)
             else:
-                left_min_index = self._query_from_range_index(start, mid,
-                                                              left_range_index,
-                                                              range_start, mid)
+                left_min_index = \
+                    self._query_from_root(start, mid, left_range_index,
+                                          range_start, mid)
                 right_min_index = \
-                    self._query_from_range_index(mid + 1, end,
-                                                 right_range_index,
-                                                 mid + 1, range_end)
+                    self._query_from_root(mid + 1, end, right_range_index,
+                                          mid + 1, range_end)
                 if self._elements[left_min_index] < \
                         self._elements[right_min_index]:
                     return left_min_index
                 else:
                     return right_min_index
-
