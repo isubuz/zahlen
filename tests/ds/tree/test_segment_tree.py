@@ -135,15 +135,15 @@ class TestQuery(unittest.TestCase):
 
     def test_exp_start_less_than_0(self):
         sg = SegmentTree([2, 1, 0, 3])
-        self.assertRaises(ValueError, sg.query, -1, 2)
+        self.assertRaises(IndexError, sg.query, -1, 2)
 
     def test_exp_start_greater_than_end(self):
         sg = SegmentTree([2, 1, 0, 3])
-        self.assertRaises(ValueError, sg.query, 3, 1)
+        self.assertRaises(IndexError, sg.query, 3, 1)
 
     def test_exp_end_greater_than_max_size(self):
         sg = SegmentTree([2, 1, 0, 3])
-        self.assertRaises(ValueError, sg.query, 1, 6)
+        self.assertRaises(IndexError, sg.query, 1, 6)
 
 
 class TestQueryEvenElements(unittest.TestCase):
@@ -292,4 +292,43 @@ class TestUpdate(unittest.TestCase):
 
     These tests assumes the correctness of SegmentTree.query().
     """
-    pass
+
+    def test_index_less_than_0_exception(self):
+        sg = SegmentTree([10, 11])
+        self.assertRaises(IndexError, sg.update, -1, 10)
+
+    def test_index_greater_than_size_exception(self):
+        sg = SegmentTree([10, 11])
+        self.assertRaises(IndexError, sg.update, 2, 10)
+
+    def test_update_leftmost_leaf(self):
+        sg = SegmentTree([2, 1, 3, 6, -2, 1, 0, -2, -1])
+        sg.update(0, 0)
+        self.assertEqual(sg.query(0, 1), 0)
+        self.assertEqual(sg.query(0, 3), 0)
+        self.assertEqual(sg.query(0, 4), 4)
+
+    def test_update_rightmost_leaf(self):
+        sg = SegmentTree([2, 1, 3, 6, -2, 1, 0, -2, -1])
+        sg.update(8, 2)
+        self.assertEqual(sg.query(0, 8), 7)
+        sg.update(8, -3)
+        self.assertEqual(sg.query(5, 8), 8)
+
+    def test_update_left_leaf(self):
+        sg = SegmentTree([2, 1, 3, 6, -2, 1, 0, -2, -1])
+        sg.update(2, 0)
+        self.assertEqual(sg.query(0, 3), 2)
+        self.assertEqual(sg.query(0, 4), 4)
+
+    def test_update_right_leaf(self):
+        sg = SegmentTree([2, 1, 3, 6, -2, 1, 0, -2, -1])
+        sg.update(6, -1)
+        self.assertEqual(sg.query(5, 6), 6)
+        self.assertEqual(sg.query(4, 8), 7)
+
+    def test_update_root_min(self):
+        sg = SegmentTree([2, 1, 3, 6, -2, 1, 0, -2, -1])
+        sg.update(5, -3)
+        self.assertEqual(sg.query(5, 8), 5)
+        self.assertEqual(sg.query(0, 8), 5)
