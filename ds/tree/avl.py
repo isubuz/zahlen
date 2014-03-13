@@ -97,24 +97,27 @@ class AVLTree(bst.BinarySearchTree):
         return is_balanced
 
     def _balance(self, node):
+        """Recursively balances a node and all its ancestors."""
         parent = node.parent
+
         if node.is_left_heavy():
             # If left child is right heavy, first make it left heavy.
             if node.left.is_right_heavy(diff=0):
                 self._rotate_left(node.left, node.left.right)
+
             self._rotate_right(node, node.left)
         elif node.is_right_heavy():
             # If right child is left heavy, first make it right heavy.
             if node.right.is_left_heavy(diff=0):
                 self._rotate_right(node.right, node.right.left)
+
             self._rotate_left(node, node.right)
 
         if parent:
             self._balance(parent)
 
     def _rotate_left(self, node, heavy_child):
-        """Rotate to make the node the left child of its ``heavy_child``."""
-
+        """Rotates ``node`` to make it the left child of ``heavy_child``."""
         parent = node.parent
 
         node.right = heavy_child.left
@@ -124,14 +127,14 @@ class AVLTree(bst.BinarySearchTree):
         heavy_child.left = node
         heavy_child.update()
 
+        # Update parent pointers (if any)
         if parent:
             parent.add_child(heavy_child)
         else:
             self.root = heavy_child
 
     def _rotate_right(self, node, heavy_child):
-        """Rotate to make the node the right child of its ``heavy_child.``"""
-
+        """Rotates ``node`` to make it the right child of ``heavy_child.``"""
         parent = node.parent
 
         node.left = heavy_child.right
@@ -141,6 +144,7 @@ class AVLTree(bst.BinarySearchTree):
         heavy_child.right = node
         heavy_child.update()
 
+        # Update parent pointers (if any)
         if parent:
             parent.add_child(heavy_child)
         else:
