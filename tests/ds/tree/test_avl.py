@@ -100,7 +100,6 @@ class TestDelete(AVLTestCase):
 
 def _get_avl(keys):
     """Return an AVL tree by inserting the keys."""
-
     avl = AVLTree()
     for key in keys:
         avl.insert(key)
@@ -114,13 +113,11 @@ def _get_balanced_bst(keys):
     with an expected AVL tree. Balancing is not required in the subclass tree
     because the keys are inserted in an order such the tree is always balanced
     on insertion.
-    The caller must take care that the keys are correctly ordered.
+    The caller must take care that the keys are ordered correctly.
     """
-
     class BalancedAVL(AVLTree):
         def _update(self, node):
             """Overridden update() which does not balance the tree."""
-
             while node:
                 node.update()
                 node = node.parent
@@ -129,7 +126,3 @@ def _get_balanced_bst(keys):
     for key in keys:
         avl.insert(key)
     return avl
-
-
-if __name__ == '__main__':
-    unittest.main()
