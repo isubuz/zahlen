@@ -4,6 +4,8 @@
     zahlen.ds.tree.avl
     ~~~~~~~~~~~~~~~~~~
 
+    This module implements the AVL tree data structure.
+
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
@@ -12,48 +14,71 @@ import bst
 
 
 class Node(bst.Node):
-    def __init__(self, key):
-        """
+    """A node in an AVL tree.
 
-        height: No. of nodes in the longest path from the node to a leaf node.
-        """
+    An AVL tree is a BST and a node is an AVL tree is similar to a BST node.
+    In order to keep track of the height of a node, an AVL tree node contains
+    an additional height attribute.
+    The height of a node is the length of the longest path from the node to a
+    leaf node.
+
+    :param key: value store in the node
+    """
+
+    def __init__(self, key):
         super(Node, self).__init__(key)
-        self.height = 0
+        self._height = 0
+
+    @property
+    def height(self):
+        return self._height
 
     @property
     def left_height(self):
+        """Returns the height of the left child."""
         return self.left.height if self.left else -1
 
     @property
     def right_height(self):
+        """Returns the height of the right child."""
         return self.right.height if self.right else -1
 
     def is_heavy(self):
+        """Returns true if the difference of height between the left and right
+        children is greater than 1.
+        """
         return abs(self.left_height - self.right_height) > 1
 
     def is_left_heavy(self, diff=1):
-        return (self.left_height - self.right_height) > diff
+        """Returns true if left child's height minus right child's height is
+        greater than ``diff``.
+        """
+        return self.left_height - self.right_height > diff
 
     def is_right_heavy(self, diff=1):
-        return (self.right_height - self.left_height) > diff
+        """Returns true if right child's height minus left child's height is
+        greater than ``diff``.
+        """
+        return self.right_height - self.left_height > diff
 
     def update(self):
-        """Update the size and height of the node."""
-
-        self.size = 1 + self.left_size + self.right_size
-        self.height = 1 + max(self.left_height, self.right_height)
+        """Updates the weight and height of the node."""
+        self.weight = self.count + self.left_weight + self.right_weight
+        self._height = 1 + max(self.left_height, self.right_height)
 
 
 class AVLTree(bst.BinarySearchTree):
+    """An AVL tree which is a binary search tree."""
 
     @staticmethod
     def create_node(key):
         return Node(key)
 
     def is_balanced(self, node=None):
-        """Return true if the AVL tree is balanced.
+        """Returns true if the tree is balanced.
 
-        Recursively check if node and its children are heavy nodes.
+        Starting from the root, it recursively checks if every node and its
+        children are non-heavy nodes.
         """
 
         if not node:
