@@ -6,6 +6,11 @@
 
     This module implements the Min-Max heap data structure.
 
+    - Add tests for insert()
+    - Check if build can be replaced by insert().
+    - Added test cases for minimum(), maximum(), delete_min(), delete_max()
+    - Rethink variable names and documentation.
+
     :copyright: (c) 2014 by Subhajit Ghosh.
     :license: MIT, see LICENSE for more details.
 """
@@ -13,11 +18,17 @@
 from collections import deque
 from math import floor, log
 
+import operator
+
 
 class MinMaxHeap(object):
     def __init__(self, elements):
+        # self._elements = deque()
+        # for element in elements:
+        #     self.insert(element)
         self._elements = deque(elements)
-        self._build()
+        if self._elements:
+            self._build()
 
     @property
     def elements(self):
@@ -48,7 +59,41 @@ class MinMaxHeap(object):
         return maximum
 
     def insert(self, value):
-        pass
+        """Insert a new value into the heap."""
+        next_leaf_index = len(self._elements)
+        self._elements.append(value)
+
+        if next_leaf_index != 0:    # Inserting a leaf node (or anon-root node)
+            parent_index = self._parent_index(next_leaf_index)
+
+            level = floor(log(next_leaf_index + 1, 2))
+            if level % 2 == 0:  # Even min level
+                if self._swap(next_leaf_index, parent_index, operator.gt):
+                    self._bubble_up_max(parent_index)
+                else:
+                    self._bubble_up_min(next_leaf_index)
+            else:   # Odd max level
+                if self._swap(next_leaf_index, parent_index, operator.lt):
+                    self._bubble_up_min(parent_index)
+                else:
+                    self._bubble_up_max(next_leaf_index)
+
+    @staticmethod
+    def _is_grand_child(index, child):
+        return child > (2 * index + 2)
+
+    @classmethod
+    def _parent_index(cls, index):
+        """Returns the parent (if any) index of ``index.``"""
+        if not index:
+            return None
+        else:
+            return (index - 1) / 2 if index % 2 != 0 else (index - 2) / 2
+
+    @classmethod
+    def _grand_parent_index(cls, index):
+        """Returns the grand parent (if any) index of ``index``."""
+        return cls._parent_index(cls._parent_index(index))
 
     def _get_children(self, index):
         max_size = len(self._elements) - 1
@@ -77,19 +122,16 @@ class MinMaxHeap(object):
 
         return indices
 
-    @staticmethod
-    def _is_grand_child(index, child):
-        return child > (2 * index + 2)
-
-    def _swap_max(self, i, j):
-        if self._elements[i] > self._elements[j]:
+    def _swap(self, i, j, cmp):
+        """Swaps elements at index i and j and returns true if comparator
+        returns true. Else returns false.
+        """
+        if cmp(self._elements[i], self._elements[j]):
             self._elements[i], self._elements[j] = \
                 self._elements[j], self._elements[i]
-
-    def _swap_min(self, i, j):
-        if self._elements[i] < self._elements[j]:
-            self._elements[i], self._elements[j] = \
-                self._elements[j], self._elements[i]
+            return True
+        else:
+            return False
 
     def _build(self):
         heap_size = len(self._elements)
@@ -101,14 +143,32 @@ class MinMaxHeap(object):
             else:
                 self._trickle_down_max(i)   # Odd max level
 
+    def _bubble_up_min(self, index):
+        """Bubbles the minimum value up the tree by comparing with the grand
+        parent's value.
+        """
+        grand_parent_index = self._grand_parent_index(index)
+        if grand_parent_index:
+            if self._swap(index, grand_parent_index, operator.lt):
+                self._bubble_up_min(grand_parent_index)
+
+    def _bubble_up_max(self, index):
+        """Bubbles the maximum value up the tree by comparing with the grand
+        parent's value.
+        """
+        grand_parent_index = self._grand_parent_index(index)
+        if grand_parent_index:
+            if self._swap(index, grand_parent_index, operator.gt):
+                self._bubble_up_max(grand_parent_index)
+
     def _trickle_down_min(self, index):
         for child in self._get_children_and_grand_children(index):
-            self._swap_min(child, index)
+            self._swap(child, index, operator.lt)
             if self._is_grand_child(index, child):
                 self._trickle_down_min(child)
 
     def _trickle_down_max(self, index):
         for child in self._get_children_and_grand_children(index):
-            self._swap_max(child, index)
+            self._swap(child, index, operator.gt)
             if self._is_grand_child(index, child):
                 self._trickle_down_max(child)
