@@ -22,13 +22,14 @@ import operator
 
 
 class MinMaxHeap(object):
-    def __init__(self, elements):
-        # self._elements = deque()
-        # for element in elements:
-        #     self.insert(element)
+    def __init__(self, elements, min_at_root=True):
         self._elements = deque(elements)
+        self._min_at_even_level = True if min_at_root else False
         if self._elements:
             self._build()
+
+    def __repr__(self):
+        return 'Min-max heap: {0}'.format(self.elements)
 
     @property
     def elements(self):
@@ -63,11 +64,10 @@ class MinMaxHeap(object):
         next_leaf_index = len(self._elements)
         self._elements.append(value)
 
-        if next_leaf_index != 0:    # Inserting a leaf node (or anon-root node)
+        if next_leaf_index != 0:    # Inserting a leaf node (or a non-root node)
             parent_index = self._parent_index(next_leaf_index)
 
-            level = floor(log(next_leaf_index + 1, 2))
-            if level % 2 == 0:  # Even min level
+            if self._is_min_level(next_leaf_index):  # Even min level
                 if self._swap(next_leaf_index, parent_index, operator.gt):
                     self._bubble_up_max(parent_index)
                 else:
@@ -82,18 +82,29 @@ class MinMaxHeap(object):
     def _is_grand_child(index, child):
         return child > (2 * index + 2)
 
+    def _is_min_level(self, index):
+        level = floor(log(index + 1, 2))
+        if level % 2 == 0:
+            if self._min_at_even_level:
+                return True
+        else:
+            if not self._min_at_even_level:
+                return True
+        return False
+
     @classmethod
     def _parent_index(cls, index):
         """Returns the parent (if any) index of ``index.``"""
-        if not index:
+        if index == 0:  # root
             return None
-        else:
+        else:   # non-root
             return (index - 1) / 2 if index % 2 != 0 else (index - 2) / 2
 
     @classmethod
     def _grand_parent_index(cls, index):
         """Returns the grand parent (if any) index of ``index``."""
-        return cls._parent_index(cls._parent_index(index))
+        parent_index = cls._parent_index(index)
+        return cls._parent_index(parent_index) if parent_index else None
 
     def _get_children(self, index):
         max_size = len(self._elements) - 1
@@ -137,8 +148,7 @@ class MinMaxHeap(object):
         heap_size = len(self._elements)
         mid = heap_size / 2 - 1
         for i in xrange(mid, -1, -1):
-            level = floor(log(i + 1, 2))
-            if level % 2 == 0:
+            if self._is_min_level(i):
                 self._trickle_down_min(i)   # Even min level
             else:
                 self._trickle_down_max(i)   # Odd max level
@@ -148,7 +158,7 @@ class MinMaxHeap(object):
         parent's value.
         """
         grand_parent_index = self._grand_parent_index(index)
-        if grand_parent_index:
+        if grand_parent_index is not None:
             if self._swap(index, grand_parent_index, operator.lt):
                 self._bubble_up_min(grand_parent_index)
 
@@ -157,7 +167,7 @@ class MinMaxHeap(object):
         parent's value.
         """
         grand_parent_index = self._grand_parent_index(index)
-        if grand_parent_index:
+        if grand_parent_index is not None:
             if self._swap(index, grand_parent_index, operator.gt):
                 self._bubble_up_max(grand_parent_index)
 
