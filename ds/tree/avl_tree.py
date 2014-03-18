@@ -62,17 +62,14 @@ class Node(binary_search_tree.Node):
         return self.right_height - self.left_height > diff
 
     def update(self):
-        """Updates the weight and height of the node."""
-        self.weight = self.count + self.left_weight + self.right_weight
         self._height = 1 + max(self.left_height, self.right_height)
 
 
 class AVLTree(binary_search_tree.BinarySearchTree):
     """An AVL tree which is a binary search tree."""
 
-    @staticmethod
-    def create_node(key):
-        return Node(key)
+    def __init__(self, node_type=Node):
+        super(AVLTree, self).__init__(node_type)
 
     def is_balanced(self, node=None):
         """Returns true if the tree is balanced.
@@ -150,7 +147,7 @@ class AVLTree(binary_search_tree.BinarySearchTree):
         else:
             self.root = heavy_child
 
-    def _update(self, node):
+    def _bubble_up_node_attrs(self, node):
         while node:
             node.update()
 

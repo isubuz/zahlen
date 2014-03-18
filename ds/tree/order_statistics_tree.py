@@ -10,10 +10,10 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import binary_search_tree
+import avl_tree
 
 
-class Node(binary_search_tree.Node):
+class Node(avl_tree.Node):
     def __init__(self, key):
         super(Node, self).__init__(key)
         self._size = 1
@@ -30,8 +30,13 @@ class Node(binary_search_tree.Node):
     def right_size(self):
         return self.right._size if self.right else 0
 
+    def update(self):
+        """Recalculates and updates the size of a node."""
+        super(Node, self).update()
+        self._size = self.left_size + self.right_size
 
-class OrderStatisticsTree(binary_search_tree.BinarySearchTree):
+
+class OrderStatisticsTree(avl_tree.AVLTree):
     def __init__(self):
         super(OrderStatisticsTree, self).__init__(Node)
 
@@ -81,8 +86,3 @@ class OrderStatisticsTree(binary_search_tree.BinarySearchTree):
                     k = k - node.right_size - 1
                 else:
                     return self.kth_smallest_key(k, node.right)
-
-    def _update_node(self, node):
-        """Updates the attributes of a tree node."""
-        while node:
-            pass

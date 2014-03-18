@@ -165,7 +165,7 @@ class BinarySearchTree(object):
             else:
                 parent.right = self._Node(key)
 
-            self._update(parent)
+            self._bubble_up_node_attrs(parent)
 
     def search(self, key):
         """Returns true if key `key` exists in the tree, else False."""
@@ -283,13 +283,11 @@ class BinarySearchTree(object):
                 node = node.left if key < node.key else node.right
         return node
 
-    def _update(self, node):
-        """Update node attributes.
+    def _bubble_up_node_attrs(self, node):
+        """Recalculates the attribute of node ``node`` and bubbles up the
+        attribute changes up the tree to the root.
 
-        This method should be called when deleting or inserting a node in the
-        tree.
+        This method should be called for a parent node after a node has been
+        inserted or deleted from the parent node.
         """
-
-        while node:
-            node.weight = node.count + node.right_weight + node.left_weight
-            node = node.parent
+        pass

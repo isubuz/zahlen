@@ -19,6 +19,7 @@ Feel free to contribute and add more implementations.
 ##### Tree
 * [AVL Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/avl_tree.py)
 * [Binary Search Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/binary_search_tree.py)
+* [Binary Search Tree with duplicate keys] (https://github.com/isubuz/zahlen/blob/master/ds/tree/binary_search_tree_with_dup.py)
 * [Bit Indexed Tree (Fenwick Tree)] (https://github.com/isubuz/zahlen/blob/master/ds/tree/fenwick_tree.py)
 * [Order Statistics Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/order_statistics_tree.py)
 * [Segment Tree] (https://github.com/isubuz/zahlen/blob/master/ds/tree/segment_tree.py)
