@@ -10,10 +10,10 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import bst
+import binary_search_tree
 
 
-class Node(bst.Node):
+class Node(binary_search_tree.Node):
     """A node in an AVL tree.
 
     An AVL tree is a BST and a node is an AVL tree is similar to a BST node.
@@ -22,7 +22,7 @@ class Node(bst.Node):
     The height of a node is the length of the longest path from the node to a
     leaf node.
 
-    :param key: value store in the node
+    :param key: value stored in the node
     """
 
     def __init__(self, key):
@@ -67,7 +67,7 @@ class Node(bst.Node):
         self._height = 1 + max(self.left_height, self.right_height)
 
 
-class AVLTree(bst.BinarySearchTree):
+class AVLTree(binary_search_tree.BinarySearchTree):
     """An AVL tree which is a binary search tree."""
 
     @staticmethod
