@@ -84,11 +84,7 @@ class BinarySearchTree(object):
     def delete(self, key):
         """Deletes key ``key`` from the tree."""
         node = self._search_node(key, silent=False)
-
-        if node.is_leaf():
-            self._delete_leaf_node(node)
-        else:
-            self._delete_internal_node(node)
+        self._delete_node(node)
 
     def search(self, key):
         """Returns True if key `key` exists in the tree, else False."""
