@@ -61,6 +61,14 @@ class Node(binary_search_tree.Node):
         """
         return self.right_height - self.left_height > diff
 
+    def add_child(self, child):
+        """Add a left or a right child based on the child's key."""
+
+        if child.key < self.key:
+            self.left = child
+        else:
+            self.right = child
+
     def update(self):
         self._height = 1 + max(self.left_height, self.right_height)
 
