@@ -21,7 +21,6 @@ class Node(object):
         self._left = None
         self._right = None
         self.parent = None
-
         self.key = key
 
     def __str__(self):
@@ -99,10 +98,7 @@ class BinarySearchTree(object):
     def inorder_walk(self, node, keys):
         if node:
             self.inorder_walk(node.left, keys)
-
-            # Handle duplicate keys
-            for _ in xrange(node.count):
-                keys.append(node.key)
+            keys.append(node.key)
             self.inorder_walk(node.right, keys)
 
     def draw(self, node, depth=0):
