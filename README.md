@@ -42,7 +42,7 @@ Feel free to contribute and add more implementations.
 
 ##### Sorting
 * Counting sort
-* Heap sort
+* [Heap sort] (https://github.com/isubuz/zahlen/blob/master/ds/heap/heap.py)
 * Insertion sort
 * Quick sort
 * Radix sort
