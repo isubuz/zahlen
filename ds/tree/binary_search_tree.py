@@ -89,7 +89,7 @@ class BinarySearchTree(object):
         """Returns True if key `key` exists in the tree, else False."""
         return self._search_node(key) is not None
 
-    def sort(self):
+    def sorted_keys(self):
         """Returns a sorted list of the keys in the tree."""
         keys = []
         self.inorder_walk(self.root, keys)
@@ -133,7 +133,6 @@ class BinarySearchTree(object):
                 parent.left = None
             else:
                 parent.right = None
-            self._bubble_up_node_attrs(parent)
         else:
             self.root = None
         del node
@@ -154,7 +153,6 @@ class BinarySearchTree(object):
                     parent.right = child
             else:
                 self.root = child
-            self._bubble_up_node_attrs(parent)
         else:
             # For an complete internal node, replace node's key by inorder
             # successor's key and remove the successor.
@@ -163,7 +161,6 @@ class BinarySearchTree(object):
                 successor = successor.left
             self._delete_node(successor)
             node.key = successor.key
-            self._bubble_up_node_attrs(node)
 
     def _search_node(self, key, silent=True):
         """Return the node with key ``key`` if it exists, else return None.
