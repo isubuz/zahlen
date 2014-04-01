@@ -14,75 +14,90 @@ import avl_tree
 
 
 class Node(avl_tree.Node):
+    """A node in a order statistics tree.
+
+    An order statistics tree is a binary tree. This implementation of the Order
+    statistics tree is also a AVL tree. A node in a Order statistics tree
+    maintains an additional attribute ``weight``. The weight of a node is the
+    total number of nodes in the subtree with the node as the root. E.g. A
+    leaf node has weight 1. A node with 2 leaf nodes as children has weight 3.
+    """
+
     def __init__(self, key):
         super(Node, self).__init__(key)
-        self._size = 1
+        self.weight = 1
 
     @property
-    def size(self):
-        return self._size
+    def left_weight(self):
+        return self.left.weight if self.left else 0
 
     @property
-    def left_size(self):
-        return self.left._size if self.left else 0
-
-    @property
-    def right_size(self):
-        return self.right._size if self.right else 0
+    def right_weight(self):
+        return self.right.weight if self.right else 0
 
     def update(self):
         """Recalculates and updates the size of a node."""
         super(Node, self).update()
-        self._size = self.left_size + self.right_size
+        self.weight = 1 + self.left_weight + self.right_weight
 
 
 class OrderStatisticsTree(avl_tree.AVLTree):
-    def __init__(self):
-        super(OrderStatisticsTree, self).__init__(Node)
+    """Implements an Order statistics tree which is also an AVL tree.
+
+    The underlying tree can also be implemented as a simple binary tree
+    ``BinarySearchTree`` or a binary tree with duplicates
+    ``BinarySearchTreeDupKeys``
+    """
 
     def kth_smallest_key(self, k, root=None):
-        """Return the kth smallest element in the tree.
+        """Returns the kth smallest element in the tree.
 
         :param root: (optional) the root node to start the search from.
         """
-
         if not root:
             root = self.root
 
-        max_index = 0 if not root else root.size
-        if not 1 <= k <= max_index:
-            raise IndexError('Rank must be a positive value greater than: '
-                             '{0}'.format(max_index))
+        if not root:
+            raise Exception('Tree is empty!')
+
+        if not 1 <= k <= root.weight:
+            raise IndexError('Rank must be a positive value less than: '
+                             '{0}'.format(root.weight))
 
         while True:
-            left_subtree_size = root.left_size
-
-            if k <= left_subtree_size:
-                # Smallest element lies in the left subtree
-                root = root.left
+            left_subtree_weight = root.left_weight
+            if k <= left_subtree_weight:
+                root = root.left        # Smallest element in the left subtree
             else:
-                k -= (left_subtree_size + root.count)
-                if k <= 0:
-                    # Smallest element is the root
-                    return root.key
+                k -= (left_subtree_weight + 1)  # 1 is for the root element
+                if k == 0:
+                    return root.key     # Smallest element is the root
                 else:
-                    # Smallest element lies in the right subtree
-                    root = root.right
+                    root = root.right   # Smallest element in the right subtree
 
     def kth_successor(self, k, key):
-        """Return the kth-successor of a key."""
+        """Returns the kth-successor of a key."""
+        if k < 0:
+            raise IndexError('Successor index must be greater than 0')
+        if not self.root:
+            raise Exception('Tree is empty!')
 
-        if k < 0 or k > self.successor_count(key):
-            raise IndexError('Invalid successor index: {0}'.format(k))
-
-        node = self._search_node(key)
+        node = self._search_node(key, silent=False)
 
         while True:
             if k == 0:
                 return node.key
             else:
-                if k > node.right_size:
-                    node = self.successor_ancestor(node)
-                    k = k - node.right_size - 1
+                if k > node.right_weight:
+                    k -= (node.right_weight + 1)
+
+                    # Go to the ancestor node
+                    while node.parent:
+                        node = node.parent
+                        if node.key > key:
+                            break
+                    if node.key < key:
+                        raise IndexError('Invalid successor index: {0}'
+                                         .format(k))
                 else:
                     return self.kth_smallest_key(k, node.right)
