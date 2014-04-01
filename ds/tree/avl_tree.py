@@ -61,6 +61,7 @@ class Node(binary_search_tree.Node):
             self.right = child
 
     def update(self):
+        """Recalculate and updates the height of a node."""
         self.height = 1 + max(self.left_height, self.right_height)
 
 
