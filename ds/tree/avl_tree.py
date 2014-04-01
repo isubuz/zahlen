@@ -16,22 +16,14 @@ import binary_search_tree
 class Node(binary_search_tree.Node):
     """A node in an AVL tree.
 
-    An AVL tree is a BST and a node is an AVL tree is similar to a BST node.
-    In order to keep track of the height of a node, an AVL tree node contains
-    an additional height attribute.
-    The height of a node is the length of the longest path from the node to a
+    An AVL tree node is same as a BST node but maintains an additional property
+    ``height``. The height of a node is the longest path from the node to a
     leaf node.
-
-    :param key: value stored in the node
     """
 
     def __init__(self, key):
         super(Node, self).__init__(key)
-        self._height = 0
-
-    @property
-    def height(self):
-        return self._height
+        self.height = 0
 
     @property
     def left_height(self):
@@ -63,29 +55,28 @@ class Node(binary_search_tree.Node):
 
     def add_child(self, child):
         """Add a left or a right child based on the child's key."""
-
         if child.key < self.key:
             self.left = child
         else:
             self.right = child
 
     def update(self):
-        self._height = 1 + max(self.left_height, self.right_height)
+        self.height = 1 + max(self.left_height, self.right_height)
 
 
 class AVLTree(binary_search_tree.BinarySearchTree):
-    """An AVL tree which is a binary search tree."""
-
-    def __init__(self, node_type=Node):
-        super(AVLTree, self).__init__(node_type)
+    """Represents an AVL tree which is a binary search tree."""
 
     def is_balanced(self, node=None):
         """Returns true if the tree is balanced.
 
-        Starting from the root, it recursively checks if every node and its
-        children are non-heavy nodes.
-        """
+        The tree is balanced if every node in the tree is non-heavy i.e. for
+        every node the difference in height of its children is not greater
+        than 1.
 
+        :param node: Root node. This can be root of the AVL tree or the root of
+            a subtree in the AVL tree.
+        """
         if not node:
             node = self.root
 
@@ -102,7 +93,7 @@ class AVLTree(binary_search_tree.BinarySearchTree):
         return is_balanced
 
     def _balance(self, node):
-        """Recursively balances a node and all its ancestors."""
+        """Balances a node and all its ancestors."""
         parent = node.parent
 
         if node.is_left_heavy():
@@ -156,11 +147,12 @@ class AVLTree(binary_search_tree.BinarySearchTree):
             self.root = heavy_child
 
     def _bubble_up_node_attrs(self, node):
+        """Updates node attributes and bubbles up the updated values upto the
+        root.
+        """
         while node:
+            # Update node height and balance
             node.update()
-
-            # Updating the height may make the subtree rooted at ``node``
-            # unbalanced. Hence balance.
             self._balance(node)
 
             node = node.parent
