@@ -79,6 +79,7 @@ class BinarySearchTree(object):
                 parent.left = self._Node(key)
             else:
                 parent.right = self._Node(key)
+            self._bubble_up_node_attrs(parent)
 
     def delete(self, key):
         """Deletes key ``key`` from the tree."""
@@ -133,6 +134,7 @@ class BinarySearchTree(object):
                 parent.left = None
             else:
                 parent.right = None
+            self._bubble_up_node_attrs(parent)
         else:
             self.root = None
         del node
@@ -151,6 +153,7 @@ class BinarySearchTree(object):
                     parent.left = child
                 else:
                     parent.right = child
+                self._bubble_up_node_attrs(parent)
             else:
                 self.root = child
         else:
@@ -179,3 +182,14 @@ class BinarySearchTree(object):
             raise KeyError('Key: {0} not found in tree'.format(key))
 
         return node
+
+    def _bubble_up_node_attrs(self, node):
+        """Updates node attributes and bubbles up the updated values up to the
+        root.
+
+        This method is simply a hook for the sub-classes of BinarySearchTree to
+        update the attributes of a node (e.g. height for an AVL tree) when a
+        node is inserted or deleted. Sub-classes can override this method to
+        perform necessary after-insert of after-delete actions.
+        """
+        pass
