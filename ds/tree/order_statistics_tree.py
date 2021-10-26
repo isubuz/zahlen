@@ -75,6 +75,30 @@ class OrderStatisticsTree(avl_tree.AVLTree):
                 else:
                     root = root.right   # Smallest element in the right subtree
 
+    def rank(self, key, silent=True):
+        """Returns the rank of a key,
+        starting at 1 to be the inverse function of ktth_smallest_key
+        
+        :param silent: If False, raises an exception if ``key`` does not exist
+            in the tree.
+        """
+        passed = 1
+        node = self.root
+        while node:
+            if node.key == key:
+                return passed + node.left_weight
+            else:
+                if key < node.key:
+                    node = node.left
+                else:
+                    passed += node.left_weight + 1 # 1 is for the root element
+                    node = node.right
+
+        if silent:
+            return None
+        else:
+            raise KeyError('Key: {0} not found in tree'.format(key))
+
     def kth_successor(self, k, key):
         """Returns the kth-successor of a key."""
         if k < 0:
